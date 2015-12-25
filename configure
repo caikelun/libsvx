@@ -1,0 +1,7 @@
+#!/bin/bash
+
+auto_config_h_pathname=./src/svx_auto_config.h
+auto_config_h_macro=SVX_AUTO_CONFIG_H
+feature_macro_name_prefix=SVX_
+
+. ./base.cf

@@ -1,0 +1,125 @@
+#!/bin/bash
+
+#
+# This source code has been dedicated to the public domain by the author.
+# Anyone is free to copy, modify, publish, use, compile, sell, or distribute
+# this source code, either in source code form or as a compiled binary, 
+# for any purpose, commercial or non-commercial, and by any means.
+#
+
+[ -z "$cross_compile" ] && cross_compile=""
+[ -z "$auto_config_h_pathname" ] && auto_config_h_pathname=./auto_config.h
+[ -z "$auto_config_h_macro" ] && auto_config_h_macro=AUTO_CONFIG_H
+[ -z "$feature_macro_name_prefix" ] && feature_macro_name_prefix=""
+auto_test_pathname=./auto_test_temp_source_file_no_duplicate_name
+compile_line="${cross_compile}gcc -o $auto_test_pathname ${auto_test_pathname}.c"
+
+function check_feature()
+{
+	echo -n "checking for $feature_show_name ... "
+
+	# create the auto test source file
+	cat << EOF > $auto_test_pathname.c
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <sys/types.h>
+$feature_incs
+
+int main()
+{
+    $feature_test
+    return 0;
+}
+EOF
+
+	# compile
+	eval "/bin/sh -c \"$compile_line\" >/dev/null 2>&1"
+
+	# check the output file
+	if [ -x $auto_test_pathname ]; then
+		cat << EOF >> $auto_config_h_pathname
+#define $feature_macro_name_prefix$feature_macro_name 1
+EOF
+		echo "found"
+	else
+		cat << EOF >> $auto_config_h_pathname
+#define $feature_macro_name_prefix$feature_macro_name 0
+EOF
+		echo "not found"
+	fi
+
+	# remove all temporary files
+	rm -f $auto_test_pathname* >/dev/null 2>&1
+}
+
+# cleanup the old auto-config-h file
+rm -f $auto_config_h_pathname >/dev/null 2>&1
+touch $auto_config_h_pathname
+
+# starting
+cat << EOF >> $auto_config_h_pathname
+#ifndef $auto_config_h_macro
+#define $auto_config_h_macro 1
+
+EOF
+
+# start checking for ...
+
+feature_show_name="select"
+feature_macro_name="HAVE_SELECT"
+feature_incs="#include <sys/select.h>"
+feature_test="select(0, NULL, NULL, NULL, NULL);"
+check_feature
+
+feature_show_name="poll"
+feature_macro_name="HAVE_POLL"
+feature_incs="#include <poll.h>"
+feature_test="poll(NULL, 0, 0);"
+check_feature
+
+feature_show_name="epoll"
+feature_macro_name="HAVE_EPOLL"
+feature_incs="#include <sys/epoll.h>"
+feature_test="epoll_create(1);"
+check_feature
+
+feature_show_name="eventfd"
+feature_macro_name="HAVE_EVENTFD"
+feature_incs="#include <sys/eventfd.h>"
+feature_test="eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC | EFD_SEMAPHORE);"
+check_feature
+
+feature_show_name="timerfd"
+feature_macro_name="HAVE_TIMERFD"
+feature_incs="#include <sys/timerfd.h>"
+feature_test="timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);"
+check_feature
+
+feature_show_name="signalfd"
+feature_macro_name="HAVE_SIGNALFD"
+feature_incs="#include <sys/signalfd.h>"
+feature_test="signalfd(-1, NULL, SFD_NONBLOCK | SFD_CLOEXEC);"
+check_feature
+
+feature_show_name="inotify"
+feature_macro_name="HAVE_INOTIFY"
+feature_incs="#include <sys/inotify.h>"
+feature_test="inotify_init();"
+check_feature
+
+feature_show_name="glic-endian"
+feature_macro_name="HAVE_GLIBC_ENDIAN"
+feature_incs="#include <endian.h>"
+feature_test="htobe64(0);"
+check_feature
+
+# ending
+cat << EOF >> $auto_config_h_pathname
+
+#endif
+EOF
+
+echo "$0: OK"
+
+exit 0

@@ -1,0 +1,28 @@
+# Ignore common compiled files.
+*.o
+*.d
+*.gcno
+*.gcda
+*.gcov
+*.a
+*.so
+test/test
+benchmarks/httpserver/httpserver
+
+# Ignore configure generated files.
+src/svx_auto_config.h
+
+# Ignore doxygen generated files.
+doc/html/
+doc/*.db
+
+# Ignore runtime files.
+*.pid
+*.log
+*.crash
+benchmarks/httpserver/*.png
+
+# Ignore other temporary files.
+*~
+cscope.files
+cscope.out
