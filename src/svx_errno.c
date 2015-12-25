@@ -5,6 +5,7 @@
  * for any purpose, commercial or non-commercial, and by any means.
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -46,9 +47,9 @@ static size_t svx_errno_str_svx_map_size =
 
 int svx_errno_to_str(int errnum, char *buf, size_t buflen)
 {
-    int len = 0;
-    int errno_fixed;
-    int strerror_r_ret = 0;
+    int  len = 0;
+    int  errno_fixed;
+    char errmsg[1024];
 
     if(NULL == buf) return SVX_ERRNO_INVAL;
     
@@ -62,18 +63,8 @@ int svx_errno_to_str(int errnum, char *buf, size_t buflen)
     {
         /* system errno */
         if((len = snprintf(buf, buflen, "%s:", SVX_ERRNO_TYPE_SYS)) >= buflen) return SVX_ERRNO_RANGE;
-        if(0 != (strerror_r_ret = strerror_r(errnum, buf + len, buflen - len)))
-        {
-            /* strerror_r() reset the system errno */
-            if(strerror_r_ret < 0) strerror_r_ret = errno;
-            
-            if(EINVAL == strerror_r_ret)
-            {
-                if(snprintf(buf, buflen, "%s", SVX_ERRNO_TYPE_STR_UNKNOWN) >= buflen)
-                    return SVX_ERRNO_RANGE;
-            }
-            return strerror_r_ret;
-        }
+        if(snprintf(buf + len, buflen - len, "%s", strerror_r(errnum, errmsg, sizeof(errmsg))) >= buflen - len)
+            return SVX_ERRNO_RANGE;
         return 0;
     }
     else if(errnum > SVX_ERRNO_BASE_SVX && errnum <= SVX_ERRNO_MAX_SVX)
@@ -83,7 +74,7 @@ int svx_errno_to_str(int errnum, char *buf, size_t buflen)
         errno_fixed = errnum - SVX_ERRNO_BASE_SVX;
         if(errno_fixed > 0 && errno_fixed < svx_errno_str_svx_map_size)
         {
-            if(snprintf(buf + len, buflen - len, svx_errno_str_svx_map[errno_fixed]) >= buflen - len)
+            if(snprintf(buf + len, buflen - len, "%s", svx_errno_str_svx_map[errno_fixed]) >= buflen - len)
                 return SVX_ERRNO_RANGE;
             return 0;
         }

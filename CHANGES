@@ -1,4 +1,9 @@
+2015-12-25  caikelun  <caikelun@gmail.com>
+
+  * Change GCC language standard (-std) from gnu89 to c99.
+  * Fix some GCC 4.8 compiler warning.
+  * Version 0.0.2
+
 2015-12-20  caikelun  <caikelun@gmail.com>
 
   * First commit.
-

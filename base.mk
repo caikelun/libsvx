@@ -32,6 +32,7 @@ TOOL_AR            ?= $(TOOL_CROSS_COMPILE)ar
 TOOL_RANLIB        ?= $(TOOL_CROSS_COMPILE)ranlib
 TOOL_STRIP         ?= $(TOOL_CROSS_COMPILE)strip
 
+OPTION_FLAG        += -std=c99
 ifeq ($(BUILD),debug)
 OPTION_FLAG        += -O0 -g3
 else

@@ -5,6 +5,7 @@
  * for any purpose, commercial or non-commercial, and by any means.
  */
 
+#define _GNU_SOURCE
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -75,7 +76,7 @@ int svx_util_get_exe_pathname(char *pathname, size_t len, size_t *result_len)
 int svx_util_get_exe_basename(char *basename, size_t len, size_t *result_len)
 {
     char    buf[PATH_MAX];
-    size_t  rlen;
+    size_t  rlen = 0;
     char   *p;
     int     r;
 
@@ -100,7 +101,7 @@ int svx_util_get_exe_basename(char *basename, size_t len, size_t *result_len)
 int svx_util_get_exe_dirname(char *dirname, size_t len, size_t *result_len)
 {
     char    buf[PATH_MAX];
-    size_t  rlen;
+    size_t  rlen = 0;
     char   *p;
     int     r;
 
@@ -125,7 +126,7 @@ int svx_util_get_exe_dirname(char *dirname, size_t len, size_t *result_len)
 
 int svx_util_get_absolute_path(const char *path, char *buf, size_t buf_len)
 {
-    size_t rlen;
+    size_t rlen = 0;
     int    r;
 
     if(NULL == path || NULL == buf || 0 == buf_len)

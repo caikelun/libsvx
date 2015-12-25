@@ -20,6 +20,7 @@ doc/*.db
 *.pid
 *.log
 *.crash
+test/*.txt
 benchmarks/httpserver/*.png
 
 # Ignore other temporary files.

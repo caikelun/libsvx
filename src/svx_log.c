@@ -5,6 +5,7 @@
  * for any purpose, commercial or non-commercial, and by any means.
  */
 
+#define _GNU_SOURCE
 #include <syslog.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -786,15 +787,15 @@ void svx_log_errno_msg(svx_log_level_t level, const char *file, int line, const 
 
     /* write to syslog */
     if(level <= svx_log_level_syslog)
-        syslog(svx_log_level_info[level].syslog_level, buf);
+        syslog(svx_log_level_info[level].syslog_level, "%s", buf);
 
     /* write to stdout */
     if(level <= svx_log_level_stdout)
     {
         if('\n' == buf[len - 1]) buf[len - 1] = '\0';
         flockfile(stdout);
-        printf(svx_log_level_info[level].stdout_style_header);
-        printf(buf);
+        printf("%s", svx_log_level_info[level].stdout_style_header);
+        printf("%s", buf);
         printf(SVX_LOG_STDOUT_STYLE_TAILER);
         fflush(stdout);
         funlockfile(stdout);

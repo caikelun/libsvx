@@ -5,6 +5,7 @@
  * for any purpose, commercial or non-commercial, and by any means.
  */
 
+#define _GNU_SOURCE
 #include <inttypes.h>
 #include <unistd.h>
 #include <stdlib.h>
