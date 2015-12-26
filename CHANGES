@@ -1,3 +1,8 @@
+2015-12-26  caikelun  <caikelun@gmail.com>
+
+  * Add website links in README.md.
+  * Version 0.0.3
+
 2015-12-25  caikelun  <caikelun@gmail.com>
 
   * Change GCC language standard (-std) from gnu89 to c99.

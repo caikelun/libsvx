@@ -10,10 +10,10 @@ Linux, but it depend on very few libraries (only libc and libpthread).
 
 libsvx use reactor pattern. It provides a mechanism to execute a callback
 function when a specific event occurs on a file descriptor or after a
-timeout has been reached. Based on this mechanism, libsvx provides several
-basic network module, they are: TCP server module, TCP client module,
-UDP module and ICMP module. libsvx do *NOT* provides application layer
-network module like: HTTP server, HTTP client, DNS client, etc.
+timeout has been reached. Based on this mechanism, libsvx contains the
+following basic network modules: TCP server module, TCP client module,
+UDP module and ICMP module. libsvx does *NOT* contain any application layer
+network modules like HTTP server, HTTP client, DNS client, etc.
 
 libsvx use the thread mode called: one I/O looper pre thread, with optional
 thread pool.
@@ -31,7 +31,7 @@ Feature
 * asynchronous log module
 * crash log module
 * thread pool module
-* process helper module (watchdog, daemon, singleton, user/group, signal, ...)
+* process helper module (watchdog, daemon, singleton, user/group, signal, etc.)
 * use BSD queue(3) and tree(3) data structure
 
 
@@ -57,23 +57,23 @@ libsvx/nginx and weighttp run in the same machine.
         ......
         worker_processes 1; #2;
         worker_rlimit_nofile 10240;
-	    events {
-	        worker_connections  10240;
+        events {
+            worker_connections  10240;
         }
-	    http {
-	        ......
+        http {
+            ......
             keepalive_timeout  65;
             keepalive_requests 10000;
             server {
-		        ......
+                ......
                 listen 80;
                 location /hello {
-			        default_type text/plain;
-				    return 200 'hello world!';
-			    }
-		    }
-	    }
-		......
+                    default_type text/plain;
+                    return 200 'hello world!';
+                }
+            }
+        }
+        ......
 
 * Weighttp version: 0.3
 
@@ -88,11 +88,12 @@ libsvx/nginx and weighttp run in the same machine.
 ![libsvx vs. Nginx (2 threads/workers)](doc/bm_httpsvr_2.png)
 
 
-Clone and Download
-------------------
+Website, Clone and Download
+---------------------------
 
-    git clone https://github.com/caikelun/libsvx.git
-	wget https://github.com/caikelun/libsvx/archive/master.zip
+* Github: https://github.com/caikelun/libsvx
+* Coding: https://coding.net/u/caikelun/p/libsvx
+* OSC: https://git.oschina.net/caikelun/libsvx
 
 
 Build, Test and Clean
@@ -116,14 +117,14 @@ Samples
 * test/
 
 
-Document
---------
+Documents
+---------
 
-Build local document from source code use doxygen:
+Build local documents from source code use doxygen:
 
     make doc
 
-Visit online document:
+Visit online documents:
 
 http://caikelun.github.io/devel/libsvx/doc/index.html
 
