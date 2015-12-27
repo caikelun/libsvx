@@ -1,3 +1,10 @@
+2015-12-27  caikelun  <caikelun@gmail.com>
+
+  * Make the source code compatible with C90, GNU90, C99, GNU99, C11 and GNU11.
+  * Change GCC language standard (-std) from c99 to c11.
+  * Add more information in README.md.
+  * Version 0.0.4
+
 2015-12-26  caikelun  <caikelun@gmail.com>
 
   * Add website links in README.md.
@@ -9,6 +16,6 @@
   * Fix some GCC 4.8 compiler warning.
   * Version 0.0.2
 
-2015-12-20  caikelun  <caikelun@gmail.com>
+2015-12-20  caikeun  <caikelun@gmail.com>
 
   * First commit.

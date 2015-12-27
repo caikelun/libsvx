@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -66,7 +66,7 @@ static void *test_udp_server_thd(void *arg)
     if(svx_looper_create(&looper)) TEST_EXIT;
     if(svx_inetaddr_from_ipport(&server_addr, addr->server_ip, addr->server_port)) TEST_EXIT;
     if(svx_udp_server(&fd, &server_addr)) TEST_EXIT;
-    if(SVX_INETADDR_IS_IP_MULTICAST(&server_addr)) //for multicast
+    if(SVX_INETADDR_IS_IP_MULTICAST(&server_addr)) /* for multicast */
     {
         if(NULL == addr->client_ip)
         {
@@ -86,7 +86,7 @@ static void *test_udp_server_thd(void *arg)
     if(svx_looper_loop(looper)) TEST_EXIT;
 
     if(svx_channel_destroy(&channel)) TEST_EXIT;
-    if(SVX_INETADDR_IS_IP_MULTICAST(&server_addr)) //for multicast
+    if(SVX_INETADDR_IS_IP_MULTICAST(&server_addr)) /* for multicast */
     {
         if(NULL == addr->client_ip)
         {
@@ -120,7 +120,7 @@ static void *test_udp_client_thd(void *arg)
     {
         if(0 != svx_udp_client(&fd, NULL, NULL, SVX_INETADDR_FAMILY(&server_addr))) TEST_EXIT;
     }
-    else //for multicast
+    else /* for multicast */
     {
         if(NULL == addr->client_ip)
         {

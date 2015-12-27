@@ -30,7 +30,7 @@
 #ifndef SVX_TREE_H
 #define SVX_TREE_H
 
-//#include <sys/cdefs.h>
+/* #include <sys/cdefs.h> */
 #define __unused __attribute__((__unused__))
 
 /*

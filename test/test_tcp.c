@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -52,10 +52,10 @@ typedef struct
 
 typedef struct
 {
-    uint8_t  cmd;  //1:echo small body. 2:upload large body. 3:download large body.
-    uint8_t  type; //1:request. 2:response.
-    uint32_t looper_idx; //for checking data, only for test program
-    uint32_t client_idx; //for checking data, only for test program
+    uint8_t  cmd;  /* 1:echo small body. 2:upload large body. 3:download large body. */
+    uint8_t  type; /* 1:request. 2:response. */
+    uint32_t looper_idx; /* for checking data, only for test program */
+    uint32_t client_idx; /* for checking data, only for test program */
     uint32_t body_len;
 }__attribute__((packed)) test_tcp_proto_header_t;
 
@@ -75,7 +75,7 @@ typedef struct
     uint32_t looper_idx;
     uint32_t client_idx;
     uint32_t body_len;
-    uint32_t body_idx; // hold the body index uploaded or downloaded
+    uint32_t body_idx; /* hold the body index uploaded or downloaded */
 } test_tcp_server_ctx_t;
 
 typedef struct
@@ -91,10 +91,10 @@ typedef struct
 {
     uint32_t cmd_round_total;
     uint32_t cmd_round_cur;
-    uint8_t  cmd_send; // command seq: 1 -> 2 -> 3
+    uint8_t  cmd_send; /* command seq: 1 -> 2 -> 3 */
     uint8_t  cmd_recv;
     uint32_t body_len;
-    uint32_t body_idx; // hold the body index uploaded or downloaded
+    uint32_t body_idx; /* hold the body index uploaded or downloaded */
 } test_tcp_client_ctx_t;
 
 typedef struct
@@ -177,14 +177,16 @@ static int test_tcp_check_msg_buf(uint8_t *buf, size_t buf_len, uint8_t cmd, uin
     for(i = 0; i < buf_len; i++)
         if(buf[i] != content)
         {
-            //printf("buf_len:%zu, cmd:%hhu, looper_idx:%u, client_idx:%u, i:%zu, content:%hhu\n",
-            //       buf_len, cmd, looper_idx, client_idx, i, content);
-            //for(i = 0; i < buf_len; i++)
-            //    printf("[%02zu]: %hhu\n", i, buf[i]);
-            return 1; //failed
+            /*
+            printf("buf_len:%zu, cmd:%hhu, looper_idx:%u, client_idx:%u, i:%zu, content:%hhu\n",
+                   buf_len, cmd, looper_idx, client_idx, i, content);
+            for(i = 0; i < buf_len; i++)
+                printf("[%02zu]: %hhu\n", i, buf[i]);
+            */
+            return 1; /* failed */
         }
 
-    return 0; //OK
+    return 0; /* OK */
 }
 
 static void test_tcp_server_send_response_header(svx_tcp_connection_t *conn,
@@ -436,7 +438,7 @@ static void test_tcp_client_send_upload_request(svx_tcp_connection_t *conn, test
     ctx->body_len = msg_upload[client_info->looper_idx][client_info->client_idx].len;
     ctx->body_idx = 0;
 
-    //printf("[%d][%d] send upload request, body_len:%u\n", client_info->looper_idx, client_info->client_idx, ctx->body_len);
+    /* printf("[%d][%d] send upload request, body_len:%u\n", client_info->looper_idx, client_info->client_idx, ctx->body_len); */
     test_tcp_client_send_request_header(conn, ctx->cmd_send, client_info->looper_idx, client_info->client_idx, ctx->body_len);
     /* all upload body(data) will be send in the write_completed_cb()...... */
 }
@@ -470,7 +472,7 @@ static void test_tcp_client_established_cb(svx_tcp_connection_t *conn, void *arg
     if(svx_tcp_connection_disable_write_completed(conn)) TEST_EXIT;
 
     ctx->cmd_round_total = TEST_TCP_CLIENT_ROUND_PER_CLIENT;
-    ctx->cmd_round_cur   = 0; //first round
+    ctx->cmd_round_cur   = 0; /* first round */
     ctx->cmd_recv        = 0;
 
     test_tcp_client_send_echo_request(conn, ctx, client_info);
@@ -488,13 +490,13 @@ static void test_tcp_client_write_completed_cb(svx_tcp_connection_t *conn, void 
     send_len = ((ctx->body_len - ctx->body_idx) > sizeof(tmp) ? sizeof(tmp) : (ctx->body_len - ctx->body_idx));
     if(0 == send_len || ctx->body_idx + send_len == ctx->body_len)
     {
-        //printf("[%d][%d] send upload request send_len:%zu (%u/%u) [last]\n", client_info->looper_idx, client_info->client_idx, send_len, ctx->body_idx, ctx->body_len);
+        /* printf("[%d][%d] send upload request send_len:%zu (%u/%u) [last]\n", client_info->looper_idx, client_info->client_idx, send_len, ctx->body_idx, ctx->body_len); */
         /* this is the last sending for upload, so we disable the write_completed callback */
         if(svx_tcp_connection_disable_write_completed(conn)) TEST_EXIT;
     }
     if(send_len > 0)
     {
-        //printf("[%d][%d] send upload request send_len:%zu (%u/%u)\n", client_info->looper_idx, client_info->client_idx, send_len, ctx->body_idx, ctx->body_len);
+        /* printf("[%d][%d] send upload request send_len:%zu (%u/%u)\n", client_info->looper_idx, client_info->client_idx, send_len, ctx->body_idx, ctx->body_len); */
         test_tcp_build_msg_buf(tmp, send_len, ctx->cmd_send, client_info->looper_idx, client_info->client_idx);
         if(svx_tcp_connection_write(conn, tmp, send_len)) TEST_EXIT;
         ctx->body_idx += send_len;
@@ -548,7 +550,7 @@ static void test_tcp_client_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
         ctx->cmd_recv = 0;
         
         /* send download request */
-        //printf("[%d][%d] send download request\n", client_info->looper_idx, client_info->client_idx);
+        /* printf("[%d][%d] send download request\n", client_info->looper_idx, client_info->client_idx); */
         if(0 == (client_info->client_idx % 2))
         {
             /* in current thread */
@@ -700,25 +702,25 @@ static void test_tcp_do(const char *tcp_server_ip, int tcp_server_io_loopers_num
     test_tcp_server_closed_conns   = 0;
     test_tcp_clients_alive_cnt     = TEST_TCP_CLIENT_LOOPER_CNT;
 
-    //a half of clients started before server started
+    /* a half of clients started before server started */
     for(i = 0; i < (TEST_TCP_CLIENT_LOOPER_CNT / 2); i++)
         if(pthread_create(&(test_tcp_clients[i].tid), NULL, &test_tcp_client_main_thd, (void *)((intptr_t)i))) TEST_EXIT;
     usleep(50 * 1000);
 
-    //server started
+    /* server started */
     if(pthread_create(&(test_tcp_server.tid), NULL, &test_tcp_server_main_thd, NULL)) TEST_EXIT;
     usleep(50 * 1000);
 
-    //the other half of clients started after server started
+    /* the other half of clients started after server started */
     for(; i < TEST_TCP_CLIENT_LOOPER_CNT; i++)
         if(pthread_create(&(test_tcp_clients[i].tid), NULL, &test_tcp_client_main_thd, (void *)((intptr_t)i))) TEST_EXIT;
 
-    //join all client and server threads
+    /* join all client and server threads */
     for(i = 0; i < TEST_TCP_CLIENT_LOOPER_CNT; i++)
         if(pthread_join(test_tcp_clients[i].tid, NULL)) TEST_EXIT;
     if(pthread_join(test_tcp_server.tid, NULL)) TEST_EXIT;
 
-    //final check
+    /* final check */
     if(test_tcp_server_closed_conns != TEST_TCP_CLIENT_LOOPER_CNT * TEST_TCP_CLIENT_CNT_PER_LOOPER) TEST_EXIT;
     if(0 != test_tcp_clients_alive_cnt) TEST_EXIT;
     for(i = 0; i < TEST_TCP_CLIENT_LOOPER_CNT; i++)
@@ -736,7 +738,7 @@ int test_tcp_runner()
     gettimeofday(&tv, NULL);
     rand = tv.tv_sec + tv.tv_usec;
     
-    //load some random data
+    /* load some random data */
     for(i = 0; i < TEST_TCP_CLIENT_LOOPER_CNT; i++)
     {
         for(j = 0; j < TEST_TCP_CLIENT_CNT_PER_LOOPER; j++)
@@ -753,9 +755,11 @@ int test_tcp_runner()
             else
                 msg_download[i][j].len = (size_t)(labs(random() + rand) % TEST_TCP_LARGE_BODY_MAX_LEN);
 
-            //printf("[%d][%d] c1:%hhu, c2:%hhu, c3:%hhu, len1:%zu, len2:%zu, len3:%zu\n",
-            //       i, j, msg_echo[i][j].content, msg_upload[i][j].content, msg_download[i][j].content,
-            //       msg_echo[i][j].len, msg_upload[i][j].len, msg_download[i][j].len);
+            /*
+            printf("[%d][%d] c1:%hhu, c2:%hhu, c3:%hhu, len1:%zu, len2:%zu, len3:%zu\n",
+                   i, j, msg_echo[i][j].content, msg_upload[i][j].content, msg_download[i][j].content,
+                   msg_echo[i][j].len, msg_upload[i][j].len, msg_download[i][j].len);
+            */
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -29,7 +29,7 @@
 #include "svx_util.h"
 #include "svx_notifier.h"
 
-//#define SVX_LOG_SELF_DEBUG_FLAG
+/* #define SVX_LOG_SELF_DEBUG_FLAG */
 #if defined(SVX_LOG_SELF_DEBUG_FLAG)
 #define SVX_LOG_SELF_DEBUG_PRINT(fmt, ...) printf("%s.%d: "fmt, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 #else

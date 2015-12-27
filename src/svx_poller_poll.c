@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -27,7 +27,7 @@ typedef struct svx_poller_poll_data
     svx_channel_t *channel;
     RB_ENTRY(svx_poller_poll_data) link;
 } svx_poller_poll_data_t;
-static inline int svx_poller_poll_data_cmp(svx_poller_poll_data_t *a, svx_poller_poll_data_t *b)
+static __inline__ int svx_poller_poll_data_cmp(svx_poller_poll_data_t *a, svx_poller_poll_data_t *b)
 {
     return (a->fd > b->fd) - (a->fd < b->fd);
 }

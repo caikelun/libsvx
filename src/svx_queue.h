@@ -33,7 +33,7 @@
 #ifndef SVX_QUEUE_H
 #define SVX_QUEUE_H
 
-// #include <sys/cdefs.h>
+/* #include <sys/cdefs.h> */
 #define __containerof(ptr, type, field) ((type *)((char *)(ptr) - ((char *)&((type *)0)->field)))
 
 /*

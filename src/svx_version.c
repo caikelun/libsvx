@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -9,7 +9,7 @@
 
 #define SVX_VERSION_MAJOR 0
 #define SVX_VERSION_MINOR 0
-#define SVX_VERSION_EXTRA 3
+#define SVX_VERSION_EXTRA 4
 
 #define SVX_VERSION ((SVX_VERSION_MAJOR << 16) | (SVX_VERSION_MINOR <<  8) | (SVX_VERSION_EXTRA))
 

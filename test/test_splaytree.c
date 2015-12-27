@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -20,7 +20,7 @@ typedef struct my_node
     int data;
     SPLAY_ENTRY(my_node) link;
 } my_node_t;
-static inline int my_node_cmp(my_node_t *a, my_node_t *b)
+static __inline__ int my_node_cmp(my_node_t *a, my_node_t *b)
 {
     return (a->key > b->key) - (a->key < b->key);
 }

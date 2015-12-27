@@ -16,11 +16,11 @@ export GPROF
 endif
 endif
 
-.PHONY: all strip lib lib-strip test benchmarks doc coverageclean clean distclean
+.PHONY: all strip lib lib-strip test test-strip benchmarks benchmarks-strip doc coverageclean clean distclean
 
-all: lib
+all: lib test benchmarks
 
-strip: lib-strip
+strip: lib-strip test-strip benchmarks-strip
 
 lib:
 	@make -C ./src lib
@@ -31,8 +31,14 @@ lib-strip:
 test: lib
 	@make -C ./test
 
+test-strip: lib-strip
+	@make -C ./test strip
+
 benchmarks: lib
 	@make -C ./benchmarks/httpserver
+
+benchmarks-strip: lib-strip
+	@make -C ./benchmarks/httpserver strip
 
 doc:
 	rm -fr ./doc/html/ ./doc/*.db

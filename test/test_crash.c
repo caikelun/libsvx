@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -63,7 +63,7 @@ void cb(int fd, void *arg)
 
     /* do any thing your want, 
        your can only invoke async-signal-safe functions here, see man(7) signal */
-    //write(STDOUT_FILENO, "crash dump file ...... created\n", 31);
+    /* write(STDOUT_FILENO, "crash dump file ...... created\n", 31); */
 }
 
 int test_crash_do()
@@ -125,14 +125,15 @@ int test_crash_check(int status)
      * we have to check valgrind's output message by ourself.
      */
 
-    // This won't work. WEXITSTATUS(status) always 0 !!!
-    //
-    //if(200 == WEXITSTATUS(status))
-    //    valgrind_found_leaks();
+    /*  This won't work. WEXITSTATUS(status) always 0 !!! */
+    /*
+    if(200 == WEXITSTATUS(status))
+        valgrind_found_leaks();
+    */
 
     /* check exit status */
-    if(WIFEXITED(status)) TEST_EXIT(1); //terminated normally?
-    if(!WIFSIGNALED(status)) TEST_EXIT(1); //not terminated by a signal?
+    if(WIFEXITED(status)) TEST_EXIT(1); /* terminated normally? */
+    if(!WIFSIGNALED(status)) TEST_EXIT(1); /* not terminated by a signal? */
 
     /* get crash dump file pathname */
     if(svx_util_get_exe_dirname(dirname, sizeof(dirname), NULL)) TEST_EXIT(1);

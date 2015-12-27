@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -46,7 +46,7 @@ typedef struct svx_looper_timer
     RB_ENTRY(svx_looper_timer)  link_id;
 } svx_looper_timer_t;
 /* use when_ms as key */
-static inline int svx_looper_timer_cmp_when(svx_looper_timer_t *a, svx_looper_timer_t *b)
+static __inline__ int svx_looper_timer_cmp_when(svx_looper_timer_t *a, svx_looper_timer_t *b)
 {
     if     (a->when_ms > b->when_ms) return 1;
     else if(a->when_ms < b->when_ms) return -1;
@@ -57,7 +57,7 @@ static inline int svx_looper_timer_cmp_when(svx_looper_timer_t *a, svx_looper_ti
 typedef RB_HEAD(svx_looper_timer_tree_when, svx_looper_timer) svx_looper_timer_tree_when_t;
 RB_GENERATE_STATIC(svx_looper_timer_tree_when, svx_looper_timer, link_when, svx_looper_timer_cmp_when);
 /* use id as key */
-static inline int svx_looper_timer_cmp_id(svx_looper_timer_t *a, svx_looper_timer_t *b)
+static __inline__ int svx_looper_timer_cmp_id(svx_looper_timer_t *a, svx_looper_timer_t *b)
 {
     return memcmp(&(a->id), &(b->id), sizeof(svx_looper_timer_id_t));
 }

@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -302,7 +302,7 @@ static int svx_process_register_signal()
     return 0;
 }
 
-//called by single and worker process
+/* called by single and worker process */
 static void svx_process_notifier_read_callback(void *arg)
 {
     int r;
@@ -734,8 +734,8 @@ int svx_process_is_running()
         else SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
     }
     if(0 != (r = svx_process_uninit())) SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
-    return 1; //running
+    return 1; /* running */
 
  err:
-    return 0; //not running
+    return 0; /* not running */
 }

@@ -1,3 +1,10 @@
+#
+# This source code has been dedicated to the public domain by the authors.
+# Anyone is free to copy, modify, publish, use, compile, sell, or distribute
+# this source code, either in source code form or as a compiled binary, 
+# for any purpose, commercial or non-commercial, and by any means.
+#
+
 BUILD              := debug
 COVERAGE           := no
 GPROF              := no
@@ -21,7 +28,7 @@ FILE_GCDA          ?= $(patsubst %.c,%.gcda,$(FILE_SRC_C)) $(patsubst %.cpp,%.gc
 FILE_GCOV          ?= $(patsubst %.c,%.c.gcov,$(FILE_SRC_C)) $(patsubst %.cpp,%.cpp.gcov,$(FILE_SRC_CPP))
 FILE_COVERAGE      ?= $(FILE_GCDA) $(FILE_GCOV)
 FILE_GPROF         ?= $(PATH_BIN)/gmon.out
-FILE_LIB           += # ./my_other_libs/libxyz.a -labc
+FILE_LIB           += # -labc ./my_other_libs/libxyz.a
 FILE_LIB_DEP       += # ./my_other_libs/libxyz.a
 FILE_CLEAN         += $(FILE_OBJ) $(FILE_DEP) $(FILE_EXE) $(FILE_STLIB) $(FILE_DYLIB) $(FILE_GCNO) $(FILE_COVERAGE) $(FILE_GPROF)
 FILE_DISTCLEAN     += $(FILE_CLEAN) $(FILE_AUTO)
@@ -32,7 +39,7 @@ TOOL_AR            ?= $(TOOL_CROSS_COMPILE)ar
 TOOL_RANLIB        ?= $(TOOL_CROSS_COMPILE)ranlib
 TOOL_STRIP         ?= $(TOOL_CROSS_COMPILE)strip
 
-OPTION_FLAG        += -std=c99
+OPTION_FLAG        += -std=c11
 ifeq ($(BUILD),debug)
 OPTION_FLAG        += -O0 -g3
 else
@@ -66,7 +73,7 @@ OPTION_LIB         += $(foreach i,$(PATH_LIB),-L$(i))
 all: $(FILE_EXE)
 
 strip: $(FILE_EXE)
-	$(TOOL_STRIP) $(FILE_EXE)
+	$(TOOL_STRIP) --strip-all $(FILE_EXE)
 
 lib: stlib dylib
 
@@ -75,12 +82,12 @@ lib-strip: stlib-strip dylib-strip
 stlib: $(FILE_STLIB)
 
 stlib-strip: $(FILE_STLIB)
-	$(TOOL_STRIP) $(FILE_STLIB)
+	$(TOOL_STRIP) --strip-debug --strip-unneeded $(FILE_STLIB)
 
 dylib: $(FILE_DYLIB)
 
 dylib-strip: $(FILE_DYLIB)
-	$(TOOL_STRIP) $(FILE_DYLIB)
+	$(TOOL_STRIP) --strip-all $(FILE_DYLIB)
 
 coverageclean:
 	rm -f $(FILE_COVERAGE)

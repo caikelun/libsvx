@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -66,10 +66,10 @@ int test_circlebuf_runner()
     {
         /* (1) send blocks to buffer */
         i = (uint64_t)(random() % (cb_block_capacity - cb_block_used + 1));
-        //printf("*** send loop ------------> %"PRIu64"\n", i);
+        /* printf("*** send loop ------------> %"PRIu64"\n", i); */
         while(block_send_cnt < TEST_CIRCLEBUF_BLOCK_TEST && i--)
         {
-            //printf("*** send: [%zu] = %zu\n", block_send_cnt, block_payload_len_saved[block_send_cnt]);
+            /* printf("*** send: [%zu] = %zu\n", block_send_cnt, block_payload_len_saved[block_send_cnt]); */
             block_send_header->payload_len  = block_payload_len_saved[block_send_cnt];
             block_len = sizeof(test_circlebuf_header_t) + block_send_header->payload_len;
 
@@ -123,10 +123,10 @@ int test_circlebuf_runner()
 
         /* receive blocks from buffer, check it */
         i = (uint64_t)(random() % (cb_block_used + 1));
-        //printf("*** recv loop ------------> %"PRIu64"\n", i);
+        /* printf("*** recv loop ------------> %"PRIu64"\n", i); */
         while(block_recv_cnt < TEST_CIRCLEBUF_BLOCK_TEST && i--)
         {
-            //printf("*** recv: [%zu] = %zu\n", block_recv_cnt, block_payload_len_saved[block_recv_cnt]);            
+            /* printf("*** recv: [%zu] = %zu\n", block_recv_cnt, block_payload_len_saved[block_recv_cnt]); */
             memset(block_recv, 0, sizeof(block_recv));
 
             /* get block */

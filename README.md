@@ -10,7 +10,7 @@ Linux, but it depend on very few libraries (only libc and libpthread).
 
 libsvx use reactor pattern. It provides a mechanism to execute a callback
 function when a specific event occurs on a file descriptor or after a
-timeout has been reached. Based on this mechanism, libsvx contains the
+timeout has been reached. Based on this mechanism, libsvx provides the
 following basic network modules: TCP server module, TCP client module,
 UDP module and ICMP module. libsvx does *NOT* contain any application layer
 network modules like HTTP server, HTTP client, DNS client, etc.
@@ -48,7 +48,12 @@ libsvx/nginx and weighttp run in the same machine.
 
 * OS: Debian 8 (Linux kernel 3.16)
 
-* libsvx: a very simple HTTP server (benchmarks/httpserver/main.c) using libsvx 0.0.1
+* libsvx version: 0.0.4
+
+* libsvx test HTTP server start/stop:
+
+        start: ./benchmarks/httpserver/httpserver
+        stop:  ./benchmarks/httpserver/httpserver stop
 
 * Nginx version: 1.9.6
 
@@ -96,16 +101,21 @@ Website, Clone and Download
 * OSC: https://git.oschina.net/caikelun/libsvx
 
 
-Build, Test and Clean
----------------------
+Compile
+-------
 
-    Configure            : ./configure
-    Build library        : make [strip] [BUILD=debug|release] [COVERAGE=yes|no] [GPROF=yes|no]
-    Build test app       : make test [BUILD=debug|release] [COVERAGE=yes|no] [GPROF=yes|no]
-    ^ Run test app       : sudo ./test/test
-    Build benchmark apps : make benchmarks [BUILD=debug|release] [COVERAGE=yes|no] [GPROF=yes|no]
-    Clean                : make clean
-    Clean all            : make distclean
+libsvx compiled using GCC, the source code compatible with C90, GNU90,
+C99, GNU99, C11 and GNU11 standard. C11 standard is used by default
+in the current Makefile.
+
+libsvx use homemade script and Makefile for configuring and compiling.
+You can reuse the ./base.cf and ./base.mk files.
+
+    Configure  : ./configure
+    Compile    : make [strip] [BUILD=debug|release] [COVERAGE=yes|no] [GPROF=yes|no]
+    ^ Run test : sudo ./test/test
+    Clean      : make clean
+    Clean all  : make distclean
 
 ^ The ICMP test need ROOT privilege.
 

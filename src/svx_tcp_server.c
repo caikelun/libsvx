@@ -1,5 +1,5 @@
 /*
- * This source code has been dedicated to the public domain by the author.
+ * This source code has been dedicated to the public domain by the authors.
  * Anyone is free to copy, modify, publish, use, compile, sell, or distribute
  * this source code, either in source code form or as a compiled binary, 
  * for any purpose, commercial or non-commercial, and by any means.
@@ -33,7 +33,7 @@ typedef struct svx_tcp_connection_node
     svx_tcp_connection_t              *conn_ptr;
     RB_ENTRY(svx_tcp_connection_node)  link;
 } svx_tcp_connection_node_t;
-static inline int svx_tcp_connection_node_cmp(svx_tcp_connection_node_t *a, svx_tcp_connection_node_t *b)
+static __inline__ int svx_tcp_connection_node_cmp(svx_tcp_connection_node_t *a, svx_tcp_connection_node_t *b)
 {
     if(a->conn_ptr == b->conn_ptr) return 0;
     else return (a->conn_ptr > b->conn_ptr ? 1 : -1);
