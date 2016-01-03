@@ -20,6 +20,7 @@
 #include "svx_errno.h"
 #include "svx_log.h"
 #include "svx_inetaddr.h"
+#include "svx_util.h"
 
 #define SVX_POLLER_EPOLL_EVENTS_SIZE_INIT 16
 
@@ -60,6 +61,8 @@ int svx_poller_epoll_create(void **self)
 
 int svx_poller_epoll_init_channel(void *self, svx_channel_t *channel)
 {
+    SVX_UTIL_UNUSED(self);
+    
     return svx_channel_set_poller_data(channel, (intmax_t)SVX_CHANNEL_EVENT_NULL);
 }
 
@@ -116,7 +119,7 @@ int svx_poller_epoll_poll(void *self, svx_channel_t **active_channels, size_t ac
         else SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
     }
 
-    for(i = 0; i < nfds && i < active_channels_size; i++)
+    for(i = 0; i < nfds && i < (int)active_channels_size; i++)
     {
         active_channels[i] = (svx_channel_t *)obj->events[i].data.ptr;
         revents = SVX_CHANNEL_EVENT_NULL;

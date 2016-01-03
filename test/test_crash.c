@@ -55,6 +55,8 @@ int aa()
 
 void cb(int fd, void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+    
     /* append any messages to the dump file */
     if(fd >= 0)
     {
@@ -85,7 +87,9 @@ int test_crash_do()
 
     fclose(stdin);
     fclose(stdout);
-    fclose(stderr);
+
+    /* let the gcc's ThreadSanitizer print messages to stderr */
+    /* fclose(stderr); */
     
     return aa();
 }

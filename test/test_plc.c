@@ -16,6 +16,7 @@
 #include "svx_poller.h"
 #include "svx_looper.h"
 #include "svx_channel.h"
+#include "svx_util.h"
 
 /* test event */
 
@@ -433,6 +434,8 @@ static test_loopertimer_every_info_t test_loopertimer_every_info_3 = {
 
 static void *test_loopertimer_loop_thread(void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+    
     if(0 != svx_looper_loop(test_loopertimer_looper))
     {
         printf("svx_looper_loop() failed\n");
@@ -445,6 +448,8 @@ static void *test_loopertimer_loop_thread(void *arg)
 /* cancel timer "every_1" in this thread */
 static void *test_loopertimer_cancel_timer_thread(void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+    
     if(0 != svx_looper_cancel(test_loopertimer_looper, test_loopertimer_every_info_1.timer_id))
     {
         printf("svx_loopertimer_cancel() failed\n");

@@ -26,11 +26,11 @@
 #define TEST_LOG_FILE_PREFIX                 "tmp_log"
 #define TEST_LOG_FILE_SUFFIX                 "txt"
 #define TEST_LOG_FILE_PATTERN                TEST_LOG_FILE_PREFIX".*."TEST_LOG_FILE_SUFFIX
-#define TEST_LOG_FILE_SIZE_MAX_EACH          (1 * 16 * 1024)
-#define TEST_LOG_FILE_SIZE_MAX_TOTAL         (4 * 16 * 1024)
-#define TEST_LOG_FILE_CACHE_SIZE_EACH        (1 *  1 * 1024)
-#define TEST_LOG_FILE_CACHE_SIZE_TOTAL_LARGE (6 * 16 * 1024)
-#define TEST_LOG_FILE_CACHE_SIZE_TOTAL_SMALL (3 *  1 * 1024)
+#define TEST_LOG_FILE_SIZE_MAX_EACH          (1  * 16 * 1024)
+#define TEST_LOG_FILE_SIZE_MAX_TOTAL         (4  * 16 * 1024)
+#define TEST_LOG_FILE_CACHE_SIZE_EACH        (1  *  1 * 1024)
+#define TEST_LOG_FILE_CACHE_SIZE_TOTAL_LARGE (12 * 16 * 1024)
+#define TEST_LOG_FILE_CACHE_SIZE_TOTAL_SMALL (3  *  1 * 1024)
 #define TEST_LOG_FILE_FLUSH_INTERVAL_S       2
 
 typedef enum
@@ -178,7 +178,7 @@ static int test_log_check(test_log_mode_t mode)
                 test_log_thds[parse_thd_idx].msg_cnt_cur++;
                 if(-1 == test_log_thds[parse_thd_idx].msg_idx_cur && 0 != parse_msg_idx)
                     test_log_thds[parse_thd_idx].missing_front_b = 1;
-                else if(test_log_thds[parse_thd_idx].msg_idx_cur + 1 != parse_msg_idx)
+                else if(test_log_thds[parse_thd_idx].msg_idx_cur + 1 != (int)parse_msg_idx)
                     test_log_thds[parse_thd_idx].consequent_b = 0;
                 test_log_thds[parse_thd_idx].msg_idx_cur = parse_msg_idx;
                 break;
@@ -223,7 +223,7 @@ static int test_log_check(test_log_mode_t mode)
     case TEST_LOG_MODE_BASE:
         for(i = 0; i < TEST_LOG_THD_CNT; i++)
         {
-            if(test_log_thds[i].msg_idx_max != test_log_thds[i].msg_idx_cur)
+            if((int)(test_log_thds[i].msg_idx_max) != test_log_thds[i].msg_idx_cur)
             {
                 printf("mode: BASE. i:%d. msg_idx_max:%u, msg_idx_cur:%d\n", i, 
                        test_log_thds[i].msg_idx_max, test_log_thds[i].msg_idx_cur);

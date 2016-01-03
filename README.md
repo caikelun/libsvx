@@ -104,20 +104,59 @@ Website, Clone and Download
 Compile
 -------
 
-libsvx compiled using GCC, the source code compatible with C90, GNU90,
-C99, GNU99, C11 and GNU11 standard. C11 standard is used by default
-in the current Makefile.
+libsvx is compiled by GCC, the source code compatible with C90, GNU90, C99, GNU99,
+C11 and GNU11 standard. C11 standard is used by default in the current Makefile.
 
-libsvx use homemade script and Makefile for configuring and compiling.
-You can reuse the ./base.cf and ./base.mk files.
+* Compiled using homemade script and Makefile:
 
-    Configure  : ./configure
-    Compile    : make [strip] [BUILD=debug|release] [COVERAGE=yes|no] [GPROF=yes|no]
-    ^ Run test : sudo ./test/test
-    Clean      : make clean
-    Clean all  : make distclean
+        Configure : ./configure
+        Compile   : make [prof=y|n]
+                    make build=d [cover=y|n] [trapv=y|n] [asan=y|n] [tsan=y|n]
+        Clean     : make clean
+        Clean all : make distclean
 
-^ The ICMP test need ROOT privilege.
+        >>> MAKE OPTIONS <<<
+        build = d (debug) | r (release, default) : Build for debug(-O0 -g3) or
+                                                   release (-O3 -fvisibility=hidden, strip).
+        prof  = y (yes)   | n (no, default)      : Build with -pg. (available when build=r)
+        cover = y (yes)   | n (no, default)      : Build with --coverage. (available when build=d)
+        trapv = y (yes)   | n (no, default)      : Build with -ftrapv. (available when build=d)
+        asan  = y (yes)   | n (no, default)      : Build with -fsanitize=address, -fsanitize=leak
+                                                   and -fsanitize=undefined. (available when build=d)
+        tsan  = y (yes) | n (no, default)        : Build with -fsanitize=thread. (available when build=d)
+
+* Or, Compiled using xmake (learn more about: https://github.com/waruqi/xmake):
+
+        Compile : xmake config --mode=release; xmake -r
+                  xmake config --mode=debug; xmake -r
+        Clean   : xmake clean
+
+        >>> NOTICE <<<
+        The current ./xmake.lua place all output files to the ./build directory.
+
+
+Test
+----
+
+libsvx have a unit test program in the ./test directory. You can use it in two ways:
+
+* Run with valgrind. In this way, you can compile the test programe with
+  build=r or build=d. But do *NOT* enable the prof, cover, trapv, asan and
+  tsan options.
+* Run directly. In this way, You *MUST* compile the test programe with
+  build=d. Then you can enable one or more of above options.
+
+        Run with valgrind : sudo ./test/test -g
+        Run directly      : sudo ./test/test -d
+
+        >>> NOTICE <<<
+        The ICMP unit test need ROOT privilege.
+
+PAY ATTENTION:
+
+After testing with "tsan=y", your *SHOULD* review each warning very carefully.
+Some of the "data race", in fact, will not cause any error or crash. If you
+try to solve them with mutex or atomic, this will cause performance problems.
 
 
 Samples
@@ -136,7 +175,7 @@ Build local documents from source code use doxygen:
 
 Visit online documents:
 
-http://caikelun.github.io/devel/libsvx/doc/index.html
+http://caikelun.github.io/proj/libsvx/doxy/index.html
 
 
 ToDo

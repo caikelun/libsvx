@@ -24,6 +24,8 @@ static svx_tcp_server_t *server = NULL;
 /* The callback to handle HTTP request */
 static void server_read(svx_tcp_connection_t *conn, svx_circlebuf_t *buf, void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+    
     /* Get the current HTTP request. */
     char   req[1024];
     size_t req_len;
@@ -61,6 +63,8 @@ static void server_read(svx_tcp_connection_t *conn, svx_circlebuf_t *buf, void *
 
 static int server_start(svx_looper_t *looper, void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+
     /* Init an address for HTTP server. */
     svx_inetaddr_t listen_addr;
     if(svx_inetaddr_from_ipport(&listen_addr, "0.0.0.0", 8080)) exit(1);
@@ -89,6 +93,9 @@ static int server_start(svx_looper_t *looper, void *arg)
 
 int server_stop(svx_looper_t *looper, void *arg)
 {
+    SVX_UTIL_UNUSED(looper);    
+    SVX_UTIL_UNUSED(arg);
+    
     /* Stop the HTTP server. */
     if(svx_tcp_server_destroy(&server)) exit(1);
     

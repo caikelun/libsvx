@@ -56,38 +56,38 @@ int svx_errno_to_str(int errnum, char *buf, size_t buflen)
     if(0 == errnum)
     {
         /* OK */
-        if(snprintf(buf, buflen, "%s", SVX_ERRNO_TYPE_STR_OK) >= buflen) return SVX_ERRNO_RANGE;
+        if(snprintf(buf, buflen, "%s", SVX_ERRNO_TYPE_STR_OK) >= (int)buflen) return SVX_ERRNO_RANGE;
         return 0;
     }
     else if(errnum > 0 && errnum <= SVX_ERRNO_MAX_SYS)
     {
         /* system errno */
-        if((len = snprintf(buf, buflen, "%s:", SVX_ERRNO_TYPE_SYS)) >= buflen) return SVX_ERRNO_RANGE;
-        if(snprintf(buf + len, buflen - len, "%s", strerror_r(errnum, errmsg, sizeof(errmsg))) >= buflen - len)
+        if((len = snprintf(buf, buflen, "%s:", SVX_ERRNO_TYPE_SYS)) >= (int)buflen) return SVX_ERRNO_RANGE;
+        if(snprintf(buf + len, buflen - len, "%s", strerror_r(errnum, errmsg, sizeof(errmsg))) >= (int)buflen - len)
             return SVX_ERRNO_RANGE;
         return 0;
     }
     else if(errnum > SVX_ERRNO_BASE_SVX && errnum <= SVX_ERRNO_MAX_SVX)
     {
         /* libsvx errno */
-        if((len = snprintf(buf, buflen, "%s:", SVX_ERRNO_TYPE_SVX)) >= buflen) return SVX_ERRNO_RANGE;
+        if((len = snprintf(buf, buflen, "%s:", SVX_ERRNO_TYPE_SVX)) >= (int)buflen) return SVX_ERRNO_RANGE;
         errno_fixed = errnum - SVX_ERRNO_BASE_SVX;
-        if(errno_fixed > 0 && errno_fixed < svx_errno_str_svx_map_size)
+        if(errno_fixed > 0 && errno_fixed < (int)svx_errno_str_svx_map_size)
         {
-            if(snprintf(buf + len, buflen - len, "%s", svx_errno_str_svx_map[errno_fixed]) >= buflen - len)
+            if(snprintf(buf + len, buflen - len, "%s", svx_errno_str_svx_map[errno_fixed]) >= (int)buflen - len)
                 return SVX_ERRNO_RANGE;
             return 0;
         }
         else
         {
-            if(snprintf(buf, buflen, "%s", SVX_ERRNO_TYPE_STR_UNKNOWN) >= buflen) return SVX_ERRNO_RANGE;
+            if(snprintf(buf, buflen, "%s", SVX_ERRNO_TYPE_STR_UNKNOWN) >= (int)buflen) return SVX_ERRNO_RANGE;
             return SVX_ERRNO_INVAL;
         }
     }
     else
     {
         /* unknown errno */
-        if(snprintf(buf, buflen, "%s", SVX_ERRNO_TYPE_STR_UNKNOWN) >= buflen) return SVX_ERRNO_RANGE;
+        if(snprintf(buf, buflen, "%s", SVX_ERRNO_TYPE_STR_UNKNOWN) >= (int)buflen) return SVX_ERRNO_RANGE;
         return SVX_ERRNO_INVAL;
     }
 }

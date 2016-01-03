@@ -137,8 +137,8 @@ static void *test_udp_client_thd(void *arg)
     for(i = 0; i < TEST_UDP_LOOP_ROUND; i++)
     {
         len = (size_t)((labs(random()) % TEST_UDP_PKG_MAX_LEN) + 1);
-        if(len != sendto(fd, buf, len, 0, &(server_addr.storage.addr), SVX_INETADDR_LEN(&server_addr))) TEST_EXIT;
-        if(len != recvfrom(fd, buf, sizeof(buf), 0, NULL, NULL)) TEST_EXIT;
+        if((ssize_t)len != sendto(fd, buf, len, 0, &(server_addr.storage.addr), SVX_INETADDR_LEN(&server_addr))) TEST_EXIT;
+        if((ssize_t)len != recvfrom(fd, buf, sizeof(buf), 0, NULL, NULL)) TEST_EXIT;
     }
 
     if(close(fd)) TEST_EXIT;

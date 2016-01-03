@@ -63,7 +63,7 @@ int svx_util_get_exe_pathname(char *pathname, size_t len, size_t *result_len)
 
     if((rslt = readlink("/proc/self/exe", pathname, len - 1)) < 0)
         SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
-    else if(rslt > len - 1)
+    else if((size_t)rslt > len - 1)
         SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_NOBUF, NULL);
     else
     {
@@ -115,7 +115,7 @@ int svx_util_get_exe_dirname(char *dirname, size_t len, size_t *result_len)
     if(NULL == p || '\0' == *(p + 1))
         SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_NODATA, "readlink(/proc/self/exe) return:%s\n", buf);
     *(p + 1) = '\0';
-    if(p - buf + 1 > len - 1)
+    if((size_t)(p - buf + 1) > len - 1)
         SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_NOBUF, NULL);
 
     strncpy(dirname, buf, len);
@@ -319,8 +319,6 @@ int svx_util_pid_file_close(const char *pathname, int *fd)
 int svx_util_set_maxfds(rlim_t maxfds)
 {
     struct rlimit rlim;
-
-    if(maxfds < 0) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "maxfds:%jd\n", maxfds);
 
     if(0 != getrlimit(RLIMIT_NOFILE, &rlim)) SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
 

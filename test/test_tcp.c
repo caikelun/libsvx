@@ -20,6 +20,7 @@
 #include "svx_tcp_client.h"
 #include "svx_threadpool.h"
 #include "svx_log.h"
+#include "svx_util.h"
 
 #define TEST_TCP_LISTEN_IPV4               "127.0.0.1"
 #define TEST_TCP_LISTEN_IPV6               "::1"
@@ -201,6 +202,8 @@ static void test_tcp_server_established_cb(svx_tcp_connection_t *conn, void *arg
 {
     test_tcp_server_ctx_t *ctx;
 
+    SVX_UTIL_UNUSED(arg);
+    
     if(NULL == (ctx = calloc(1, sizeof(test_tcp_server_ctx_t)))) TEST_EXIT;
     svx_tcp_connection_set_context(conn, ctx);
 
@@ -212,6 +215,8 @@ static void test_tcp_server_write_completed_cb(svx_tcp_connection_t *conn, void 
     test_tcp_server_ctx_t *ctx;
     uint8_t                tmp[TEST_TCP_WRITE_BUF_HIGH_WATER_MARK - 1];
     size_t                 send_len;
+    
+    SVX_UTIL_UNUSED(arg);
     
     svx_tcp_connection_get_context(conn, (void *)&ctx);
 
@@ -258,6 +263,8 @@ static void test_tcp_server_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
     uint8_t                  tmp[TEST_TCP_READ_BUF_MAX_LEN];
     size_t                   data_len;
 
+    SVX_UTIL_UNUSED(arg);
+    
     svx_tcp_connection_get_context(conn, (void *)&ctx);
 
     if(0 == ctx->cmd)
@@ -340,11 +347,17 @@ static void test_tcp_server_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
 
 static void test_tcp_server_high_water_mark_cb(svx_tcp_connection_t *conn, size_t water_mark, void *arg)
 {
+    SVX_UTIL_UNUSED(conn);
+    SVX_UTIL_UNUSED(water_mark);
+    SVX_UTIL_UNUSED(arg);
+        
     TEST_EXIT;
 }
 
 static void test_tcp_server_exit(void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+    
     if(svx_tcp_server_stop(test_tcp_server.tcp_server)) TEST_EXIT;
     if(svx_looper_quit(test_tcp_server.looper)) TEST_EXIT;
 }
@@ -353,6 +366,8 @@ static void test_tcp_server_closed_cb(svx_tcp_connection_t *conn, void *arg)
 {
     test_tcp_server_ctx_t *ctx;
 
+    SVX_UTIL_UNUSED(arg);
+    
     svx_tcp_connection_get_context(conn, (void *)&ctx);
 
     pthread_mutex_lock(&test_tcp_server_closed_conns_mutex);
@@ -373,6 +388,8 @@ static void *test_tcp_server_main_thd(void *arg)
     svx_inetaddr_t     listen_addr;
     test_tcp_server_t *server = &test_tcp_server;
 
+    SVX_UTIL_UNUSED(arg);
+    
     /* create thread pool */
     if(svx_threadpool_create(&(server->threadpool), 3, 0)) TEST_EXIT;
     
@@ -521,8 +538,8 @@ static void test_tcp_client_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
         if(2 != header.type) TEST_EXIT; /* not a response? */
         ctx->cmd_recv = header.cmd;
         if(ctx->cmd_recv != ctx->cmd_send) TEST_EXIT; /* command mismatch */
-        if(client_info->looper_idx != ntohl(header.looper_idx)) TEST_EXIT; /* looper index mismatch */
-        if(client_info->client_idx != ntohl(header.client_idx)) TEST_EXIT; /* client index mismatch */
+        if(client_info->looper_idx != (int)(ntohl(header.looper_idx))) TEST_EXIT; /* looper index mismatch */
+        if(client_info->client_idx != (int)(ntohl(header.client_idx))) TEST_EXIT; /* client index mismatch */
         ctx->body_len = ntohl(header.body_len);
         ctx->body_idx = 0;
     }
@@ -617,6 +634,10 @@ static void test_tcp_client_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
 
 static void test_tcp_client_high_water_mark_cb(svx_tcp_connection_t *conn, size_t water_mark, void *arg)
 {
+    SVX_UTIL_UNUSED(conn);
+    SVX_UTIL_UNUSED(water_mark);
+    SVX_UTIL_UNUSED(arg);
+    
     TEST_EXIT;
 }
 

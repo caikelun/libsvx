@@ -18,6 +18,7 @@
 #include "svx_poller_select.h"
 #include "svx_errno.h"
 #include "svx_log.h"
+#include "svx_util.h"
 
 typedef struct
 {
@@ -47,6 +48,9 @@ int svx_poller_select_create(void **self)
 
 int svx_poller_select_init_channel(void *self, svx_channel_t *channel)
 {
+    SVX_UTIL_UNUSED(self);
+    SVX_UTIL_UNUSED(channel);
+
     /* init nothing */
     return 0;
 }

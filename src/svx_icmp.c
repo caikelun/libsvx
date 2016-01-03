@@ -34,18 +34,18 @@
 
 struct svx_icmp
 {
-    int            running;
-    svx_looper_t  *looper;
-    uint16_t       icmphdr_id;
-    uint16_t       icmphdr_seq;
-    int            fd4;
-    svx_channel_t *channel4;
-    int            fd6;
-    svx_channel_t *channel6;
-    svx_icmp_cb_t  echoreply_cb;
-    void          *echoreply_cb_arg;
-    svx_icmp_cb_t  unreach_port_cb;
-    void          *unreach_port_cb_arg;
+    int                running;
+    svx_looper_t      *looper;
+    uint16_t           icmphdr_id;
+    volatile uint16_t  icmphdr_seq;
+    int                fd4;
+    svx_channel_t     *channel4;
+    int                fd6;
+    svx_channel_t     *channel6;
+    svx_icmp_cb_t      echoreply_cb;
+    void              *echoreply_cb_arg;
+    svx_icmp_cb_t      unreach_port_cb;
+    void              *unreach_port_cb_arg;
 };
 
 static void svx_icmp_handle_read4(void *arg)
@@ -57,23 +57,23 @@ static void svx_icmp_handle_read4(void *arg)
     svx_inetaddr_t      peer_addr;
     socklen_t           peer_addr_len;
     struct ip          *iphdr;
-    int                 iphdr_len;
+    size_t              iphdr_len;
     struct icmp        *icmphdr;
     struct ip          *inner_iphdr;
-    int                 inner_iphdr_len;
+    size_t              inner_iphdr_len;
     struct udphdr      *udphdr;
 
     for(i = 0; i < SVX_ICMP_READ_MAX_TIMES_PER_LOOP; i++)
     {
         peer_addr_len = sizeof(struct sockaddr_in);
         if(0 > (buf_len = recvfrom(self->fd4, buf, sizeof(buf), 0, &(peer_addr.storage.addr), &peer_addr_len))) return;
-        if(buf_len < sizeof(struct ip) + ICMP_MINLEN) return;
+        if((size_t)buf_len < sizeof(struct ip) + ICMP_MINLEN) return;
 
         /* IP header */
         iphdr = (struct ip *)buf;
         if(IPPROTO_ICMP != iphdr->ip_p) return;
         iphdr_len = iphdr->ip_hl * 4;
-        if(buf_len < iphdr_len + ICMP_MINLEN) return;
+        if((size_t)buf_len < iphdr_len + ICMP_MINLEN) return;
         
         /* ICMP header */
         icmphdr = (struct icmp *)(buf + iphdr_len);
@@ -88,11 +88,11 @@ static void svx_icmp_handle_read4(void *arg)
         case ICMP_UNREACH:
             if(NULL == self->unreach_port_cb) return;
             if(ICMP_UNREACH_PORT != icmphdr->icmp_code) return;
-            if(buf_len < iphdr_len + ICMP_MINLEN + sizeof(struct ip)) return;
+            if((size_t)buf_len < iphdr_len + ICMP_MINLEN + sizeof(struct ip)) return;
             inner_iphdr = (struct ip *)(buf + iphdr_len + ICMP_MINLEN);
             if(IPPROTO_UDP != inner_iphdr->ip_p) return; /* UDP only */
             inner_iphdr_len = inner_iphdr->ip_hl * 4;
-            if(buf_len < iphdr_len + ICMP_MINLEN + inner_iphdr_len + SVX_ICMP_UNREACH_MIN_LEN_AFTER_INNER_IP_ADDR) return;
+            if((size_t)buf_len < iphdr_len + ICMP_MINLEN + inner_iphdr_len + SVX_ICMP_UNREACH_MIN_LEN_AFTER_INNER_IP_ADDR) return;
             udphdr = (struct udphdr *)(buf + iphdr_len + ICMP_MINLEN + inner_iphdr_len);
             memcpy(&(peer_addr.storage.addr4.sin_addr), &(inner_iphdr->ip_dst), sizeof(struct in_addr));
             peer_addr.storage.addr4.sin_port = udphdr->dest;
@@ -114,7 +114,7 @@ static void svx_icmp_handle_read6(void *arg)
     socklen_t           peer_addr_len;
     struct icmp6_hdr   *icmphdr;
     struct ip6_hdr     *inner_iphdr;
-    int                 inner_iphdr_len;
+    size_t              inner_iphdr_len;
     uint8_t             inner_iphdr_next_header;
     struct udphdr      *udphdr;
 
@@ -122,7 +122,7 @@ static void svx_icmp_handle_read6(void *arg)
     {
         peer_addr_len = sizeof(struct sockaddr_in6);
         if(0 > (buf_len = recvfrom(self->fd6, buf, sizeof(buf), 0, &(peer_addr.storage.addr), &peer_addr_len))) return;
-        if(buf_len < sizeof(struct icmp6_hdr)) return;
+        if((size_t)buf_len < sizeof(struct icmp6_hdr)) return;
         
         /* ICMP header */
         icmphdr = (struct icmp6_hdr *)buf;
@@ -137,7 +137,7 @@ static void svx_icmp_handle_read6(void *arg)
         case ICMP6_DST_UNREACH:
             if(NULL == self->unreach_port_cb) return;
             if(ICMP6_DST_UNREACH_NOPORT != icmphdr->icmp6_code) return;
-            if(buf_len < sizeof(struct icmp6_hdr) + sizeof(struct ip6_hdr)) return;
+            if((size_t)buf_len < sizeof(struct icmp6_hdr) + sizeof(struct ip6_hdr)) return;
             inner_iphdr = (struct ip6_hdr *)(buf + sizeof(struct icmp6_hdr));
             inner_iphdr_len = sizeof(struct ip6_hdr);
             inner_iphdr_next_header = inner_iphdr->ip6_nxt;
@@ -148,7 +148,7 @@ static void svx_icmp_handle_read6(void *arg)
                 {
                 case IPPROTO_UDP:      /* 17:  User Datagram Protocol. */
                     /* found the UDP header we need */
-                    if(buf_len < sizeof(struct icmp6_hdr) + inner_iphdr_len + SVX_ICMP_UNREACH_MIN_LEN_AFTER_INNER_IP_ADDR) return;
+                    if((size_t)buf_len < sizeof(struct icmp6_hdr) + inner_iphdr_len + SVX_ICMP_UNREACH_MIN_LEN_AFTER_INNER_IP_ADDR) return;
                     udphdr = (struct udphdr *)(buf + sizeof(struct icmp6_hdr) + inner_iphdr_len);
                     memcpy(&(peer_addr.storage.addr6.sin6_addr), &(inner_iphdr->ip6_dst), sizeof(struct in6_addr));
                     peer_addr.storage.addr6.sin6_port = udphdr->dest;
@@ -163,13 +163,13 @@ static void svx_icmp_handle_read6(void *arg)
                     /* to next IPv6 extension header */
                     inner_iphdr_next_header = ((struct ip6_ext *)(buf + sizeof(struct icmp6_hdr) + inner_iphdr_len))->ip6e_nxt;
                     inner_iphdr_len += ((struct ip6_ext *)(buf + sizeof(struct icmp6_hdr) + inner_iphdr_len))->ip6e_len;
-                    if(buf_len < sizeof(struct icmp6_hdr) + inner_iphdr_len) return;
+                    if((size_t)buf_len < sizeof(struct icmp6_hdr) + inner_iphdr_len) return;
                     break;
                 case IPPROTO_FRAGMENT: /* 44:  IPv6 fragmentation header. */
                     /* to next IPv6 extension header */
                     inner_iphdr_next_header = ((struct ip6_frag *)(buf + sizeof(struct icmp6_hdr) + inner_iphdr_len))->ip6f_nxt;
                     inner_iphdr_len += sizeof(struct ip6_frag);
-                    if(buf_len < sizeof(struct icmp6_hdr) + inner_iphdr_len) return;
+                    if((size_t)buf_len < sizeof(struct icmp6_hdr) + inner_iphdr_len) return;
                     break;
                 case IPPROTO_ICMPV6:   /* 58:  ICMPv6.  */
                 case IPPROTO_NONE:     /* 59:  IPv6 no next header. */

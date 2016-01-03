@@ -27,3 +27,7 @@ benchmarks/httpserver/*.png
 *~
 cscope.files
 cscope.out
+
+# Ignore temporary files for xmake
+.xmake/
+build/

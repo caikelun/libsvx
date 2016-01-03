@@ -37,6 +37,8 @@ static int             test_icmp_unreach_port_recvived;
 
 void test_icmp_echoreply_cb(svx_inetaddr_t addr, void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+    
     if(0 == svx_inetaddr_cmp_ip(&test_icmp_addr_echo, &addr))
         test_icmp_echoreply_recvived = 1;
 
@@ -46,6 +48,8 @@ void test_icmp_echoreply_cb(svx_inetaddr_t addr, void *arg)
 
 void test_icmp_unreach_port_cb(svx_inetaddr_t addr, void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+    
     if(0 == svx_inetaddr_cmp_addr(&test_icmp_addr_unreach, &addr))
         test_icmp_unreach_port_recvived = 1;
         
@@ -57,6 +61,8 @@ void *test_icmp_thd(void *arg)
 {
     int fd;
 
+    SVX_UTIL_UNUSED(arg);
+    
     /* send ICMP ECHO */
     if(svx_icmp_send_echo(test_icmp_icmp, &test_icmp_addr_echo)) TEST_EXIT;
 

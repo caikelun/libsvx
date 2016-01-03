@@ -87,7 +87,7 @@ static char                        svx_log_timezone[6]                  = "+0000
 static svx_log_errno_mode_t        svx_log_errno_mode                   = SVX_LOG_ERRNO_MODE_NUM_STR;
 static svx_log_errno_to_str_t      svx_log_errno_to_str                 = svx_errno_to_str;
 static pthread_t                   svx_log_file_thread;
-static int                         svx_log_file_thread_running          = 0;
+static volatile int                svx_log_file_thread_running          = 0;
 static char                        svx_log_file_hostname[HOST_NAME_MAX] = "unknownhost";
 static char                        svx_log_file_dirname[PATH_MAX]       = "";
 static char                        svx_log_file_prefix[NAME_MAX]        = "";
@@ -214,7 +214,7 @@ static void svx_log_file_write_to_file(const char *buf, size_t buf_len, struct t
     ssize_t         len;
 
     /* remove the older files, if the total file size will be exceed the max total file size limit */
-    if(svx_log_file_size_cur_total < 0 || svx_log_file_size_cur_total + buf_len > svx_log_file_size_max_total)
+    if(svx_log_file_size_cur_total < 0 || svx_log_file_size_cur_total + (off_t)buf_len > svx_log_file_size_max_total)
     {
         if((n = scandir(svx_log_file_dirname, &entry, svx_log_file_filter, alphasort)) >= 0)
         {
@@ -227,7 +227,7 @@ static void svx_log_file_write_to_file(const char *buf, size_t buf_len, struct t
 
                 if(!remove_older_files)
                 {
-                    if(cur_total + st.st_size + buf_len <= svx_log_file_size_max_total)
+                    if(cur_total + st.st_size + (off_t)buf_len <= svx_log_file_size_max_total)
                     {
                         cur_total += st.st_size;
                         continue;
@@ -250,7 +250,7 @@ static void svx_log_file_write_to_file(const char *buf, size_t buf_len, struct t
     /* close the current FD, if the current file size will be exceed the max each file size limit */
     if(svx_log_file_fd >= 0)
     {
-        if(svx_log_file_size_cur_each + buf_len > svx_log_file_size_max_each)
+        if(svx_log_file_size_cur_each + (off_t)buf_len > svx_log_file_size_max_each)
         {
             SVX_LOG_SELF_DEBUG_PRINT("close\n");
             close(svx_log_file_fd);
@@ -296,6 +296,8 @@ static void *svx_log_file_thread_func(void *arg)
     int                         n;
     int                         flushing = 0;
 
+    SVX_UTIL_UNUSED(arg);
+    
     events[0].fd      = svx_log_notifier_fd_write;
     events[0].events  = POLLIN;
     events[0].revents = 0;
@@ -695,10 +697,10 @@ int svx_log_file_to_async_mode()
         SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
 
     /* create a thread for async write-to-file */
+    svx_log_file_thread_running = 1;
     if(0 != (r = pthread_create(&svx_log_file_thread, NULL, &svx_log_file_thread_func, NULL)))
         SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
     
-    svx_log_file_thread_running = 1;
     pthread_mutex_unlock(&svx_log_mutex);
     return 0;
     
@@ -709,6 +711,7 @@ int svx_log_file_to_async_mode()
     svx_log_notifier_fd_write = -1;
     svx_log_notifier_fd_flush_request = -1;
     svx_log_notifier_fd_flush_response = -1;
+    svx_log_file_thread_running = 0;
     
     pthread_mutex_unlock(&svx_log_mutex);
     return r;
@@ -716,7 +719,7 @@ int svx_log_file_to_async_mode()
 
 int svx_log_file_is_async_mode()
 {
-    return 1 == svx_log_file_thread_running ? 1 : 0;
+    return (1 == svx_log_file_thread_running) ? 1 : 0;
 }
 
 void svx_log_errno_msg(svx_log_level_t level, const char *file, int line, const char *function,

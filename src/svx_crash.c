@@ -449,6 +449,8 @@ static void svx_crash_write_baseinfo(int fd, ucontext_t *uc, int sig, siginfo_t 
     char            buf[10240] = "\0";
     svx_crash_buf_t b          = SVX_CRASH_BUF_INITIALIZER;
 
+    SVX_UTIL_UNUSED(uc);
+    
     svx_crash_buf_init(&b, buf, sizeof(buf));
 
     /* write system version */

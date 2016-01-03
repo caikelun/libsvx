@@ -35,6 +35,21 @@ extern "C" {
 #endif
 
 /*!
+ * To avoid the unused-parameter compile warning.
+ */
+#define SVX_UTIL_UNUSED(x) (void)(x)
+
+/*!
+ * Perform an atomic GET operation.
+ */
+#define SVX_UTIL_ATOMIC_GET(p) __sync_val_compare_and_swap(p, 0, 0)
+
+/*!
+ * Perform an atomic SET operation.
+ */
+#define SVX_UTIL_ATOMIC_SET(p, v) __sync_lock_test_and_set(p, v)
+
+/*!
  * Get the current thread's ID.
  *
  * \note

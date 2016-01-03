@@ -17,6 +17,7 @@
 #include "svx_errno.h"
 #include "svx_log.h"
 #include "svx_tree.h"
+#include "svx_util.h"
 
 #define SVX_POLLER_POLL_EVENTS_SIZE_INIT 64
 
@@ -68,6 +69,8 @@ int svx_poller_poll_create(void **self)
 
 int svx_poller_poll_init_channel(void *self, svx_channel_t *channel)
 {
+    SVX_UTIL_UNUSED(self);
+    
     return svx_channel_set_poller_data(channel, (intmax_t)-1);
 }
 
@@ -138,7 +141,7 @@ int svx_poller_poll_update_channel(void *self, svx_channel_t *channel)
         obj->events[idx].revents = 0;
 
         /* update the events_used */
-        if(idx + 1 > obj->events_used)
+        if((nfds_t)(idx + 1) > obj->events_used)
             obj->events_used = idx + 1;
 
         /* save the idx */
@@ -162,7 +165,7 @@ int svx_poller_poll_update_channel(void *self, svx_channel_t *channel)
         obj->events[idx].revents = 0;
         if(0 != (r = svx_channel_set_poller_data(channel, (intmax_t)-1))) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
 
-        if(idx + 1 == obj->events_used)
+        if((nfds_t)(idx + 1) == obj->events_used)
         {
             while(idx >= 0)
             {
@@ -193,7 +196,7 @@ int svx_poller_poll_poll(void *self, svx_channel_t **active_channels, size_t act
     svx_poller_poll_t      *obj       = (svx_poller_poll_t *)self;
     uint8_t                 revents   = 0;
     int                     nfds      = 0;
-    int                     i         = 0;
+    unsigned int            i         = 0;
     size_t                  cnt       = 0;
     svx_poller_poll_data_t *poll_data = NULL;
     svx_poller_poll_data_t  poll_data_key;
@@ -214,7 +217,7 @@ int svx_poller_poll_poll(void *self, svx_channel_t **active_channels, size_t act
         /* find the channel ptr */
         poll_data_key.fd = obj->events[i].fd;
         if(NULL == (poll_data = RB_FIND(svx_poller_poll_data_tree, &(obj->data_tree), &poll_data_key)))
-            SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_NOTFND, "i:%d, fd:%d", i, obj->events[i].fd);
+            SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_NOTFND, "i:%u, fd:%d", i, obj->events[i].fd);
 
         active_channels[cnt] = poll_data->channel;
         revents = SVX_CHANNEL_EVENT_NULL;

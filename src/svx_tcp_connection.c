@@ -165,16 +165,16 @@ static void svx_tcp_connection_handle_read(void *arg)
     else
     {
         /* read OK */
-        if(n <= freespace_len)
+        if((size_t)n <= freespace_len)
         {
             /* extra_buf not used*/
-            svx_circlebuf_commit_data(self->read_buf, n);
+            svx_circlebuf_commit_data(self->read_buf, (size_t)n);
         }
         else
         {
             /* extra_buf used*/
             svx_circlebuf_commit_data(self->read_buf, freespace_len);
-            if(0 != (r = svx_circlebuf_append_data(self->read_buf, (uint8_t *)extra_buf, (size_t)(n - freespace_len))))
+            if(0 != (r = svx_circlebuf_append_data(self->read_buf, (uint8_t *)extra_buf, (size_t)n - freespace_len)))
                 SVX_LOG_ERRNO_GOTO_ERR(err, r, "append_data() error. fd:%d\n", self->fd);
         }
 
@@ -229,7 +229,7 @@ static void svx_tcp_connection_handle_write(void *arg)
         /* write OK */
         svx_circlebuf_erase_data(self->write_buf, n);
 
-        if(n == data_len)
+        if((size_t)n == data_len)
         {
             if(0 != (r = svx_channel_del_events(self->channel, SVX_CHANNEL_EVENT_WRITE)))
                 SVX_LOG_ERRNO_GOTO_ERR(err, r, "del_events() error. fd:%d\n", self->fd);
@@ -609,7 +609,7 @@ int svx_tcp_connection_write(svx_tcp_connection_t *self, const uint8_t *buf, siz
         else
         {
             /* OK */
-            if(len == n)
+            if(len == (size_t)n)
             {
                 if(self->callbacks->write_completed_cb && self->write_completed_enable)
                 {
@@ -623,7 +623,7 @@ int svx_tcp_connection_write(svx_tcp_connection_t *self, const uint8_t *buf, siz
     }
 
     /* save the rest of unsent data to the write buffer */
-    if(n < len)
+    if((size_t)n < len)
     {
         svx_circlebuf_get_data_len(self->write_buf, &data_len_old);
         if(0 != (r = svx_circlebuf_append_data(self->write_buf, buf + n, len - n)))

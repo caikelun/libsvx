@@ -72,28 +72,29 @@ test_info_t test_infos[] = {
 #define DELIMITER                   STYLE_HEADER_DELIMITER              \
     "=============================================================================="STYLE_TAILER"\n"
 
-void test_show_help(char *exe_pathname)
+static void test_show_help(char *exe_pathname)
 {
     int i = -1;
     
     printf("\n"                                                         \
            "USAGE:\n"                                                   \
-           "  %s -h | -x TEST-NAME | [TEST-NAME]\n"                     \
+           "  %s -h | -g [TEST-NAME] | -d [TEST-NAME]\n"                \
            "\n"                                                         \
            "DESCRIPTION:\n"                                             \
-           "  Run test specified by TEST-NAME (or all tests if no arguments are given).\n" \
+           "  Run test specified by TEST-NAME, or all tests if without TEST-NAME.\n" \
            "\n"                                                         \
            "OPTIONS:\n"                                                 \
-           "  -h --help           Show this help\n"                     \
-           "  -x --run-directly   Run test directly (without Valgrind)\n" \
+           "  -h  Show this help\n"                                     \
+           "  -g  Run test via valgrind\n"                              \
+           "  -d  Run test directly (without valgrind)\n"               \
            "\n"                                                         \
-           "TEST-NAME:\n", basename(exe_pathname));
+           "available TEST-NAME:\n", basename(exe_pathname));
     while(test_infos[++i].name)
         printf("  %s\n", test_infos[i].name);
     printf("\n");
 }
 
-const char *test_get_errnum_msg(int errnum)
+static const char *test_get_errmsg(int errnum)
 {
     switch(errnum)
     {
@@ -105,7 +106,7 @@ const char *test_get_errnum_msg(int errnum)
     }
 }
 
-void test_show_result(test_info_t *test)
+static void test_show_result(test_info_t *test)
 {
     int i = -1;
     int name_max = 0, name_cur = 0;
@@ -126,14 +127,14 @@ void test_show_result(test_info_t *test)
         {
             test = &(test_infos[i]);
             printf(STYLE_HEADER_RESULT"[[ %-*s ]] return: %-5d ==> %s"STYLE_TAILER"\n", 
-                   name_max, test->name, test->ret, test_get_errnum_msg(test->ret));
+                   name_max, test->name, test->ret, test_get_errmsg(test->ret));
             if(0 != test->ret) have_error = 1;
         }
     }
     else
     {
         printf(STYLE_HEADER_RESULT"[[ %s ]] return: %d ==> %s"STYLE_TAILER"\n",
-               test->name, test->ret, test_get_errnum_msg(test->ret));
+               test->name, test->ret, test_get_errmsg(test->ret));
         if(0 != test->ret) have_error = 1;
     }
 
@@ -142,7 +143,7 @@ void test_show_result(test_info_t *test)
     printf(DELIMITER);
 }
 
-int test_run_test(char *exe_pathname, test_info_t *test)
+static int test_run_valgrind(char *exe_pathname, test_info_t *test)
 {
     pid_t pid;
     int   status;
@@ -164,9 +165,9 @@ int test_run_test(char *exe_pathname, test_info_t *test)
         args[i++] = "--show-reachable=yes";
         args[i++] = "--track-origins=yes";
         args[i++] = "--track-fds=yes";
-        args[i++] = "--num-callers=50";
+        args[i++] = "--num-callers=100";
         args[i++] = exe_pathname;
-        args[i++] = "-x";
+        args[i++] = "-q";
         args[i++] = test->name;
         args[i++] = NULL;
         execvp(args[0], args);
@@ -186,19 +187,19 @@ int test_run_test(char *exe_pathname, test_info_t *test)
     }
 }
 
-int test_run_all_test(char *exe_pathname)
+static int test_run_valgrind_all(char *exe_pathname)
 {
     int i = -1;
 
     while(test_infos[++i].name)
     {
-        test_run_test(exe_pathname, &(test_infos[i]));
+        test_run_valgrind(exe_pathname, &(test_infos[i]));
     }
     test_show_result(NULL);
     return 0;
 }
 
-int test_run_test_by_name(char *exe_pathname, const char *test_name, int run_directly)
+int test_run_valgrind_by_name(char *exe_pathname, const char *test_name)
 {
     int i = -1;
 
@@ -206,51 +207,108 @@ int test_run_test_by_name(char *exe_pathname, const char *test_name, int run_dir
     {
         if(0 == strcmp(test_name, test_infos[i].name))
         {
-            if(run_directly)
-            {
-                /* return the test-self's return-value to valgrind */
-                return test_infos[i].runner();
-            }
-            else
-            {
-                test_run_test(exe_pathname, &(test_infos[i]));
-                test_show_result(&(test_infos[i]));
-                return test_infos[i].ret;
-            }
+            test_run_valgrind(exe_pathname, &(test_infos[i]));
+            test_show_result(&(test_infos[i]));
+            return test_infos[i].ret;
         }
     }
-    
     test_show_help(exe_pathname);
+    return 1;
+}
+
+static int test_run_directly(char *exe_pathname, test_info_t *test)
+{
+    pid_t pid;
+    int   status;
+    char* args[16];
+    int   i = 0;
+
+    printf("run test directly for: %s ...\n", test->name);
+    switch(pid = fork())
+    {
+    case -1: /* error */
+        printf("fork() failed - errno:%d - %s\n", errno, strerror(errno));
+        return -1;
+    case 0: /* child */
+        args[i++] = exe_pathname;
+        args[i++] = "-q";
+        args[i++] = test->name;
+        args[i++] = NULL;
+        execvp(args[0], args);
+        exit(1);
+    default: /* parent */
+        if(waitpid(pid, &status, 0) < 0)
+        {
+            printf("waitpid() failed - errno:%d - %s\n", errno, strerror(errno));
+            return -1;
+        }
+        test->ret = WIFEXITED(status) ? WEXITSTATUS(status) : -2;
+        return 0;
+    }
+}
+
+static int test_run_directly_all(char *exe_pathname)
+{
+    int i = -1;
+
+    while(test_infos[++i].name)
+    {
+        test_run_directly(exe_pathname, &(test_infos[i]));
+    }
+    test_show_result(NULL);
+    return 0;
+}
+
+int test_run_directly_by_name(char *exe_pathname, const char *test_name)
+{
+    int i = -1;
+
+    while(test_infos[++i].name)
+    {
+        if(0 == strcmp(test_name, test_infos[i].name))
+        {
+            test_run_directly(exe_pathname, &(test_infos[i]));
+            test_show_result(&(test_infos[i]));
+            return test_infos[i].ret;
+        }
+    }
+    test_show_help(exe_pathname);
+    return 1;
+}
+
+int test_run_directly_by_name_quiet(const char *test_name)
+{
+    int i = -1;
+
+    while(test_infos[++i].name)
+    {
+        if(0 == strcmp(test_name, test_infos[i].name))
+        {
+            /* when call by valgrind, return the test itself's return-value to valgrind */
+            return test_infos[i].runner();
+        }
+    }
     return 1;
 }
 
 int main(int argc, char **argv)
 {
-    int                 opt         = -1;
-    int                 opt_idx     = 0;
-    const char          opt_short[] = "x:h";
-    const struct option opt_long[]  = {
-        {"run-directly", required_argument, NULL, 'x'},
-        {"help",         no_argument,       NULL, 'h'},
-        {NULL,           0,                 NULL, 0  }
-    };
-
-    while(-1 != (opt = getopt_long(argc, argv, opt_short, opt_long, &opt_idx)))
+    if(argc == 2)
     {
-        switch(opt)
-        {
-        case 'x': return test_run_test_by_name(argv[0], optarg, 1);
-        case 'h': test_show_help(argv[0]); exit(0);
-        case '?':
-        case 0  :
-        default : test_show_help(argv[0]); exit(1);
-        }
+        if(0 == strcmp(argv[1], "-g"))
+            return test_run_valgrind_all(argv[0]);
+        else if(0 == strcmp(argv[1], "-d"))
+            return test_run_directly_all(argv[0]);    }
+    else if(argc == 3)
+    {
+        if(0 == strcmp(argv[1], "-g"))
+            return test_run_valgrind_by_name(argv[0], argv[2]);
+        else if(0 == strcmp(argv[1], "-d"))
+            return test_run_directly_by_name(argv[0], argv[2]);
+        else if(0 == strcmp(argv[1], "-q"))
+            return test_run_directly_by_name_quiet(argv[2]);
     }
 
-    switch(argc)
-    {
-    case 1 : return test_run_all_test(argv[0]);
-    case 2 : return test_run_test_by_name(argv[0], argv[1], 0);
-    default: test_show_help(argv[0]); exit(1);
-    }
+    test_show_help(argv[0]);
+    exit(1);
 }

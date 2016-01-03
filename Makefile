@@ -1,53 +1,51 @@
-ifdef BUILD
-ifeq ("$(origin BUILD)","command line")
-export BUILD
+ifdef build
+ifeq ("$(origin build)","command line")
+export build
 endif
 endif
 
-ifdef COVERAGE
-ifeq ("$(origin COVERAGE)","command line")
-export COVERAGE
+ifdef prof
+ifeq ("$(origin prof)","command line")
+export prof
 endif
 endif
 
-ifdef GPROF
-ifeq ("$(origin GPROF)","command line")
-export GPROF
+ifdef cover
+ifeq ("$(origin cover)","command line")
+export cover
 endif
 endif
 
-.PHONY: all strip lib lib-strip test test-strip benchmarks benchmarks-strip doc coverageclean clean distclean
+ifdef trapv
+ifeq ("$(origin trapv)","command line")
+export trapv
+endif
+endif
+
+ifdef asan
+ifeq ("$(origin asan)","command line")
+export asan
+endif
+endif
+
+ifdef tsan
+ifeq ("$(origin tsan)","command line")
+export tsan
+endif
+endif
+
+.PHONY: all lib test benchmarks clean distclean doc
 
 all: lib test benchmarks
-
-strip: lib-strip test-strip benchmarks-strip
 
 lib:
 	@make -C ./src lib
 
-lib-strip:
-	@make -C ./src lib-strip
-
 test: lib
 	@make -C ./test
 
-test-strip: lib-strip
-	@make -C ./test strip
-
 benchmarks: lib
 	@make -C ./benchmarks/httpserver
-
-benchmarks-strip: lib-strip
-	@make -C ./benchmarks/httpserver strip
-
-doc:
-	rm -fr ./doc/html/ ./doc/*.db
-	doxygen ./doc/Doxyfile
-
-coverageclean:
-	@make -C ./src                   coverageclean
-	@make -C ./test                  coverageclean
-	@make -C ./benchmarks/httpserver coverageclean
 
 clean:
 	@make -C ./test                  clean
@@ -60,3 +58,7 @@ distclean:
 	@make -C ./benchmarks/httpserver distclean
 	@make -C ./src                   distclean
 	rm -fr ./doc/html/ ./doc/*.db
+
+doc:
+	rm -fr ./doc/html/ ./doc/*.db
+	doxygen ./doc/Doxyfile

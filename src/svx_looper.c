@@ -66,7 +66,7 @@ RB_GENERATE_STATIC(svx_looper_timer_tree_id, svx_looper_timer, link_id, svx_loop
 
 struct svx_looper
 {
-    int                            looping;
+    volatile int                   looping;
     pthread_t                      looping_tid;
 
     svx_poller_t                  *poller;

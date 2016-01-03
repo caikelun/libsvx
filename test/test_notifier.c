@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <poll.h>
 #include "svx_notifier.h"
+#include "svx_util.h"
 
 #define TEST_NOTIFIER_NOTIFY_CNT 1024
 
@@ -24,6 +25,8 @@ static int             test_notifier_seed  = 0;
 
 static void *test_notifier_thd_func(void *arg)
 {
+    SVX_UTIL_UNUSED(arg);
+
     struct pollfd event = {.fd = test_notifier_fd, .events = POLLIN, .revents = 0};
     int           nfds  = -1;
 

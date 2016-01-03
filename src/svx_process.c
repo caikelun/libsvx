@@ -144,6 +144,9 @@ static sig_atomic_t svx_process_watcher_recv_sig_child  = 0;
 
 static void svx_process_crash_cb(int fd, void *arg)
 {
+    SVX_UTIL_UNUSED(fd);
+    SVX_UTIL_UNUSED(arg);
+    
     svx_log_file_flush(1000);
 }
 
@@ -306,6 +309,8 @@ static int svx_process_register_signal()
 static void svx_process_notifier_read_callback(void *arg)
 {
     int r;
+
+    SVX_UTIL_UNUSED(arg);
     
     svx_notifier_recv(svx_process_obj.notifier);
 
@@ -680,6 +685,8 @@ int svx_process_reload(int sig)
     pid_t pid;
     int   r;
 
+    SVX_UTIL_UNUSED(sig);
+    
     svx_process_obj.role = SVX_PROCESS_ROLE_SIGNALLER;
     if(0 != (r = svx_process_init())) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
     if(0 != (r = svx_process_init_signaller(&pid))) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
@@ -695,6 +702,8 @@ int svx_process_stop(int sig)
     pid_t pid;
     int   r;
 
+    SVX_UTIL_UNUSED(sig);
+
     svx_process_obj.role = SVX_PROCESS_ROLE_SIGNALLER;
     if(0 != (r = svx_process_init())) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
     if(0 != (r = svx_process_init_signaller(&pid))) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
@@ -709,6 +718,8 @@ int svx_process_force_stop(int sig)
 {
     pid_t pid, pgid;
     int   r;
+
+    SVX_UTIL_UNUSED(sig);
 
     svx_process_obj.role = SVX_PROCESS_ROLE_SIGNALLER;
     if(0 != (r = svx_process_init())) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);

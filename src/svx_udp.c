@@ -315,7 +315,7 @@ int svx_udp_mcast_set_ttl(int fd, unsigned int ttl)
     svx_inetaddr_t local_addr;
     int            r;
 
-    if(fd < 0 || ttl < 0) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "fd:%d, ttl:%u\n", fd, ttl);
+    if(fd < 0) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "fd:%d\n", fd);
 
     if(0 != (r = svx_inetaddr_from_fd_local(&local_addr, fd)))
         SVX_LOG_ERRNO_RETURN_ERR(r, "fd:%d\n", fd);
