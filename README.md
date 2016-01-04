@@ -48,7 +48,7 @@ libsvx/nginx and weighttp run in the same machine.
 
 * OS: Debian 8 (Linux kernel 3.16)
 
-* libsvx version: 0.0.4
+* libsvx version: 0.0.6
 
 * libsvx test HTTP server start/stop:
 
@@ -104,10 +104,10 @@ Website, Clone and Download
 Compile
 -------
 
-libsvx is compiled by GCC, the source code compatible with C90, GNU90, C99, GNU99,
-C11 and GNU11 standard. C11 standard is used by default in the current Makefile.
+libsvx use GCC. The source code compatible with C90, GNU90, C99, GNU99, C11
+and GNU11 standard. C11 is used by default currently.
 
-* Compiled using homemade script and Makefile:
+* Compile using homemade scripts and Makefiles:
 
         Configure : ./configure
         Compile   : make [prof=y|n]
@@ -125,7 +125,7 @@ C11 and GNU11 standard. C11 standard is used by default in the current Makefile.
                                                    and -fsanitize=undefined. (available when build=d)
         tsan  = y (yes) | n (no, default)        : Build with -fsanitize=thread. (available when build=d)
 
-* Or, Compiled using xmake (learn more about: https://github.com/waruqi/xmake):
+* Or, Compile using xmake: ( learn more about xmake: https://github.com/waruqi/xmake )
 
         Compile : xmake config --mode=release; xmake -r
                   xmake config --mode=debug; xmake -r
@@ -140,11 +140,12 @@ Test
 
 libsvx have a unit test program in the ./test directory. You can use it in two ways:
 
-* Run with valgrind. In this way, you can compile the test programe with
-  build=r or build=d. But do *NOT* enable the prof, cover, trapv, asan and
-  tsan options.
-* Run directly. In this way, You *MUST* compile the test programe with
-  build=d. Then you can enable one or more of above options.
+* Run with valgrind. In this way, first you *MUST* have valgrind installed.
+  Then you can compile the test programe with build=r or build=d. But do *NOT*
+  enable the prof, cover, trapv, asan and tsan options.
+* Run directly. In this way, you can compile the test programe with build=d,
+  then enable cover, trapv, asan or tsan option. Or, you can compile it with
+  build=r, then enable prof option.
 
         Run with valgrind : sudo ./test/test -g
         Run directly      : sudo ./test/test -d
@@ -180,8 +181,7 @@ http://caikelun.github.io/proj/libsvx/doxy/index.html
 
 ToDo
 ----
-* svx_crash: Dump registers value for ARM architecture.
-* svx_crash: Dump registers value for ARM64 architecture.
+* svx_crash: Dump registers value for ARM/ARM64 architecture.
 * More benchmarks.
 * More samples.
 * More documents.
@@ -198,4 +198,4 @@ commercial or non-commercial, and by any means.
 
 The BSD queue(3) and tree(3) data structure header files
 (src/svx_queue.h and src/svx_tree.h) are governed by a BSD license
-that can be found at the head of each files.
+that can be found at the head of these files.

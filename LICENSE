@@ -1,0 +1,9 @@
+All of the code and documentation in libsvx has been dedicated to
+the public domain by the authors. Anyone is free to copy, modify,
+publish, use, compile, sell, or distribute the original libsvx code,
+either in source code form or as a compiled binary, for any purpose,
+commercial or non-commercial, and by any means.
+
+The BSD queue(3) and tree(3) data structure header files
+(src/svx_queue.h and src/svx_tree.h) are governed by a BSD license
+that can be found at the head of these files.

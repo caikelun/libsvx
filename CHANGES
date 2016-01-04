@@ -1,3 +1,9 @@
+2016-01-04  caikelun  <caikelun@gmail.com>
+
+  * Fix some error in README.md.
+  * Add a LICENSE file.
+  * Version 0.0.6
+
 2016-01-03  caikelun  <caikelun@gmail.com>
 
   * Add GCC sanitizer options in base.mk.
