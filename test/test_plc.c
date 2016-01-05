@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <sys/types.h>
 #include <sys/time.h>
 #include "svx_auto_config.h"
 #include "svx_poller.h"
@@ -395,7 +398,13 @@ static int test_plc_event_do()
 }
 
 /* Test timer */
-#define TEST_LOOPERTIMER_ERROR_RANGE_US (1 * 1000 * 1000) /* 1s */
+#define TEST_LOOPERTIMER_ERROR_RANGE_US  (1 * 1000 * 1000)
+#define TEST_LOOPERTIMER_TIME_AT_1_MS    1000
+#define TEST_LOOPERTIMER_TIME_AT_2_MS    2000
+#define TEST_LOOPERTIMER_TIME_AT_3_MS    3000
+#define TEST_LOOPERTIMER_TIME_EVERY_1_MS 1000
+#define TEST_LOOPERTIMER_TIME_EVERY_2_MS 900
+#define TEST_LOOPERTIMER_TIME_EVERY_3_MS 800
 
 typedef struct
 {
@@ -406,12 +415,12 @@ typedef struct
 } test_loopertimer_every_info_t;
 
 static svx_looper_t *test_loopertimer_looper      = NULL;
-static int64_t       test_loopertimer_time_at_1   = 0; /* after 1000ms */
-static int64_t       test_loopertimer_time_at_2   = 0; /* after 2000ms */
-static int64_t       test_loopertimer_time_after  = 0; /* after 3000ms */
-static int64_t       test_loopertimer_time_every_1[2]; /* every 1000ms (run 5 times) */
-static int64_t       test_loopertimer_time_every_2[5]; /* every 900ms  (run 5 times) */
-static int64_t       test_loopertimer_time_every_3[6]; /* every 800ms  (run 5 times) */
+static int64_t       test_loopertimer_time_at_1   = 0;
+static int64_t       test_loopertimer_time_at_2   = 0;
+static int64_t       test_loopertimer_time_after  = 0;
+static int64_t       test_loopertimer_time_every_1[2]; /* run 2 times */
+static int64_t       test_loopertimer_time_every_2[4]; /* run 4 times */
+static int64_t       test_loopertimer_time_every_3[6]; /* run 6 times */
 
 static test_loopertimer_every_info_t test_loopertimer_every_info_1 = {
     .times      = test_loopertimer_time_every_1,
@@ -471,8 +480,8 @@ static void test_loopertimer_task_single(void *arg)
 static void test_loopertimer_task_every(void *arg)
 {
     test_loopertimer_every_info_t *info = (test_loopertimer_every_info_t *)arg;
-    struct timeval                  now;
-    pthread_t                       thd_cancel_timer;
+    struct timeval                 now;
+    pthread_t                      thd_cancel_timer;
 
     gettimeofday(&now, NULL);
     info->times[info->times_i++] = now.tv_sec * 1000 * 1000 + now.tv_usec;
@@ -517,9 +526,9 @@ static void *test_loopertimer_add_timer_thread(void *arg)
 {
     int64_t *now_ms = (int64_t *)arg;
 
-    /* run after 2000ms */
+    /* run after */
     if(0 != svx_looper_run_at(test_loopertimer_looper, test_loopertimer_task_single, NULL,
-                              &test_loopertimer_time_at_2, *now_ms + 2000, NULL))
+                              &test_loopertimer_time_at_2, *now_ms + TEST_LOOPERTIMER_TIME_AT_2_MS, NULL))
     {
         printf("svx_looper_run_at() failed\n");
         exit(1);
@@ -577,51 +586,53 @@ static int test_plc_timer_do()
     gettimeofday(&now, NULL);
     now_ms = now.tv_sec * 1000 + now.tv_usec / 1000;
 
-    /* run at (after 1000ms) */
+    /* run at */
     if(0 != svx_looper_run_at(test_loopertimer_looper, test_loopertimer_task_single, NULL,
-                              &test_loopertimer_time_at_1, now_ms + 1000, NULL))
+                              &test_loopertimer_time_at_1, now_ms + TEST_LOOPERTIMER_TIME_AT_1_MS, NULL))
     {
         printf("svx_looper_run_at() failed\n");
         goto end;
     }
 
-    /* run at (after 2000ms) (add timer "at_2" in another thread) */
+    /* run at (add timer "at_2" in another thread) */
     if(0 != pthread_create(&thd_add_timer, NULL, &test_loopertimer_add_timer_thread, &now_ms))
     {
         printf("pthread_create() failed\n");
         goto end;
     }
-    pthread_join(thd_add_timer, NULL);    
 
-    /* run after 3000ms */
+    /* run after */
     if(0 != svx_looper_run_after(test_loopertimer_looper, test_loopertimer_task_single, NULL,
-                                 &test_loopertimer_time_after, 3000, NULL))
+                                 &test_loopertimer_time_after, TEST_LOOPERTIMER_TIME_AT_3_MS, NULL))
     {
         printf("svx_loopertimer_run_at() failed\n");
         goto end;
     }
 
-    /* run every 1000ms (delay 1000ms) */
+    /* run every */
     if(0 != svx_looper_run_every(test_loopertimer_looper, test_loopertimer_task_every, NULL,
-                                 &test_loopertimer_every_info_1, 1000, 1000, 
+                                 &test_loopertimer_every_info_1, TEST_LOOPERTIMER_TIME_EVERY_1_MS,
+                                 TEST_LOOPERTIMER_TIME_EVERY_1_MS,
                                  &(test_loopertimer_every_info_1.timer_id)))
     {
         printf("svx_loopertimer_run_every() failed\n");
         goto end;
     }
 
-    /* run every 900ms (delay 900ms) */
+    /* run every */
     if(0 != svx_looper_run_every(test_loopertimer_looper, test_loopertimer_task_every, NULL,
-                                 &test_loopertimer_every_info_2, 900, 900, 
+                                 &test_loopertimer_every_info_2, TEST_LOOPERTIMER_TIME_EVERY_2_MS,
+                                 TEST_LOOPERTIMER_TIME_EVERY_2_MS, 
                                  &(test_loopertimer_every_info_2.timer_id)))
     {
         printf("svx_loopertimer_run_every() failed\n");
         goto end;
     }
 
-    /* run every 800ms (delay 800ms) */
+    /* run every */
     if(0 != svx_looper_run_every(test_loopertimer_looper, test_loopertimer_task_every, NULL,
-                                 &test_loopertimer_every_info_3, 800, 800, 
+                                 &test_loopertimer_every_info_3, TEST_LOOPERTIMER_TIME_EVERY_3_MS,
+                                 TEST_LOOPERTIMER_TIME_EVERY_3_MS, 
                                  &(test_loopertimer_every_info_3.timer_id)))
     {
         printf("svx_loopertimer_run_every() failed\n");
@@ -650,20 +661,24 @@ static int test_plc_timer_do()
         printf("every 2: %"PRIi64"\n", test_loopertimer_every_info_2.times[i]);
     for(i = 0; i < test_loopertimer_every_info_3.times_size; i++)
         printf("every 3: %"PRIi64"\n", test_loopertimer_every_info_3.times[i]);
+    printf("\n");
 #endif
 
     /* check */
-    if(0 != test_loopertimer_check(now_ms * 1000, test_loopertimer_time_at_1, 1000))
+    if(0 != test_loopertimer_check(now_ms * 1000, test_loopertimer_time_at_1,
+                                   TEST_LOOPERTIMER_TIME_AT_1_MS))
     {
         printf("check test_loopertimer_time_at_1 failed\n");
         goto end;
     }
-    if(0 != test_loopertimer_check(now_ms * 1000, test_loopertimer_time_at_2, 2000))
+    if(0 != test_loopertimer_check(now_ms * 1000, test_loopertimer_time_at_2,
+                                   TEST_LOOPERTIMER_TIME_AT_2_MS))
     {
         printf("check test_loopertimer_time_at_2 failed\n");
         goto end;
     }
-    if(0 != test_loopertimer_check(now_ms * 1000, test_loopertimer_time_after, 3000))
+    if(0 != test_loopertimer_check(now_ms * 1000, test_loopertimer_time_after,
+                                   TEST_LOOPERTIMER_TIME_AT_3_MS))
     {
         printf("check test_loopertimer_time_after failed\n");
         goto end;
@@ -671,7 +686,8 @@ static int test_plc_timer_do()
     for(i = 0; i < test_loopertimer_every_info_1.times_size; i++)
     {
         if(0 != test_loopertimer_check(0 == i ? now_ms * 1000 : test_loopertimer_every_info_1.times[i - 1],
-                                        test_loopertimer_every_info_1.times[i], 1000))
+                                       test_loopertimer_every_info_1.times[i],
+                                       TEST_LOOPERTIMER_TIME_EVERY_1_MS))
         {
             printf("check test_loopertimer_time_every_1[%zu] failed\n", i);
             goto end;
@@ -680,7 +696,8 @@ static int test_plc_timer_do()
     for(i = 0; i < test_loopertimer_every_info_2.times_size; i++)
     {
         if(0 != test_loopertimer_check(0 == i ? now_ms * 1000 : test_loopertimer_every_info_2.times[i - 1],
-                                        test_loopertimer_every_info_2.times[i], 900))
+                                       test_loopertimer_every_info_2.times[i],
+                                       TEST_LOOPERTIMER_TIME_EVERY_2_MS))
         {
             printf("check test_loopertimer_time_every_2[%zu] failed\n", i);
             goto end;
@@ -689,7 +706,8 @@ static int test_plc_timer_do()
     for(i = 0; i < test_loopertimer_every_info_3.times_size; i++)
     {
         if(0 != test_loopertimer_check(0 == i ? now_ms * 1000 : test_loopertimer_every_info_3.times[i - 1],
-                                        test_loopertimer_every_info_3.times[i], 800))
+                                       test_loopertimer_every_info_3.times[i],
+                                       TEST_LOOPERTIMER_TIME_EVERY_3_MS))
         {
             printf("check test_loopertimer_time_every_3[%zu] failed\n", i);
             goto end;
@@ -699,6 +717,7 @@ static int test_plc_timer_do()
     r = 0; /* OK */
 
  end:
+    pthread_join(thd_add_timer, NULL);    
     if(test_loopertimer_looper)
     {
         if(0 != svx_looper_destroy(&test_loopertimer_looper) || NULL != test_loopertimer_looper)

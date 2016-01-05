@@ -1,3 +1,11 @@
+2016-01-05  caikelun  <caikelun@gmail.com>
+
+  * Fix compiler options.
+  * Fix timeout error in svx_poller_select.c.
+  * Fix stack overflow error in test_tcp.c.
+  * Optimize code in test_plc.c.
+  * Version 0.0.7
+
 2016-01-04  caikelun  <caikelun@gmail.com>
 
   * Fix some error in README.md.

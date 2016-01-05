@@ -27,12 +27,12 @@
 #define TEST_TCP_LISTEN_PORT               20000
 
 #define TEST_TCP_READ_BUF_MIN_LEN          128
-#define TEST_TCP_READ_BUF_MAX_LEN          (64 * 1024)
+#define TEST_TCP_READ_BUF_MAX_LEN          (16 * 1024)
 #define TEST_TCP_WRITE_BUF_MIN_LEN         128
-#define TEST_TCP_WRITE_BUF_HIGH_WATER_MARK (64 * 1024)
+#define TEST_TCP_WRITE_BUF_HIGH_WATER_MARK (16 * 1024)
 
 #define TEST_TCP_SMALL_BODY_MAX_LEN        64
-#define TEST_TCP_LARGE_BODY_MAX_LEN        (5 * 1024 * 1024)
+#define TEST_TCP_LARGE_BODY_MAX_LEN        (1 * 1024 * 1024)
 
 #define TEST_TCP_CLIENT_LOOPER_CNT         5 /* how many loopers(threads) for clients? */
 #define TEST_TCP_CLIENT_CNT_PER_LOOPER     3 /* how many clients per looper? */
@@ -213,24 +213,28 @@ static void test_tcp_server_established_cb(svx_tcp_connection_t *conn, void *arg
 static void test_tcp_server_write_completed_cb(svx_tcp_connection_t *conn, void *arg)
 {
     test_tcp_server_ctx_t *ctx;
-    uint8_t                tmp[TEST_TCP_WRITE_BUF_HIGH_WATER_MARK - 1];
+    uint8_t               *tmp = NULL;
+    size_t                 tmp_max = TEST_TCP_WRITE_BUF_HIGH_WATER_MARK - 1;
     size_t                 send_len;
     
     SVX_UTIL_UNUSED(arg);
     
     svx_tcp_connection_get_context(conn, (void *)&ctx);
 
-    send_len = ((ctx->body_len - ctx->body_idx) > sizeof(tmp) ? sizeof(tmp) : (ctx->body_len - ctx->body_idx));
+    send_len = ((ctx->body_len - ctx->body_idx) > tmp_max ? tmp_max : (ctx->body_len - ctx->body_idx));
     if(0 == send_len || ctx->body_idx + send_len == ctx->body_len)
     {
         /* this is the last sending for download, so we disable the write_completed callback */
-        if(svx_tcp_connection_disable_write_completed(conn)) TEST_EXIT;        
+        if(svx_tcp_connection_disable_write_completed(conn)) TEST_EXIT;
     }
     if(send_len > 0)
     {
+        if(NULL == (tmp = malloc(send_len))) TEST_EXIT;
         test_tcp_build_msg_buf(tmp, send_len, ctx->cmd, ctx->looper_idx, ctx->client_idx);
         if(svx_tcp_connection_write(conn, tmp, send_len)) TEST_EXIT;
         ctx->body_idx += send_len;
+        free(tmp);
+        tmp = NULL;
     }
     if(ctx->body_idx == ctx->body_len)
     {
@@ -260,8 +264,10 @@ static void test_tcp_server_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
 {
     test_tcp_server_ctx_t   *ctx;
     test_tcp_proto_header_t  header;
-    uint8_t                  tmp[TEST_TCP_READ_BUF_MAX_LEN];
+    uint8_t                 *tmp = NULL;
+    size_t                   tmp_max = TEST_TCP_READ_BUF_MAX_LEN;
     size_t                   data_len;
+    size_t                   body_len;
 
     SVX_UTIL_UNUSED(arg);
     
@@ -287,14 +293,28 @@ static void test_tcp_server_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
         if(ctx->body_len != msg_echo[ctx->looper_idx][ctx->client_idx].len) TEST_EXIT;
         if(ctx->body_len > 0)
         {
-            if(svx_circlebuf_get_data(buf, tmp, ctx->body_len)) return; /* have not enough body */
-            if(test_tcp_check_msg_buf(tmp, ctx->body_len, ctx->cmd, ctx->looper_idx, ctx->client_idx)) TEST_CHECK_FAILED;
+            if(svx_circlebuf_get_data_len(buf, &body_len)) TEST_EXIT;
+            if(body_len >= ctx->body_len)
+            {
+                if(NULL == (tmp = malloc(ctx->body_len))) TEST_EXIT;
+                if(svx_circlebuf_get_data(buf, tmp, ctx->body_len)) TEST_EXIT;
+                if(test_tcp_check_msg_buf(tmp, ctx->body_len, ctx->cmd, ctx->looper_idx, ctx->client_idx)) TEST_CHECK_FAILED;
+            }
+            else
+            {
+                return; /* have not enough body */
+            }
         }
-        
+
         /* send echo response */
         test_tcp_server_send_response_header(conn, ctx->cmd, ctx->looper_idx, ctx->client_idx, ctx->body_len);
         if(ctx->body_len > 0)
+        {
+            if(NULL == tmp) TEST_EXIT;
             if(svx_tcp_connection_write(conn, tmp, ctx->body_len)) TEST_EXIT;
+            free(tmp);
+            tmp = NULL;
+        }
         ctx->cmd = 0; /* finished */
         break;
         
@@ -302,14 +322,17 @@ static void test_tcp_server_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
         /* recv upload request */
         if(ctx->body_len != msg_upload[ctx->looper_idx][ctx->client_idx].len) TEST_EXIT;
         if(svx_circlebuf_get_data_len(buf, &data_len)) TEST_EXIT;
-        if(data_len > sizeof(tmp)) TEST_EXIT;
+        if(data_len > tmp_max) TEST_EXIT;
         if(data_len > 0)
         {
             /* read all body from client */
+            if(NULL == (tmp = malloc(data_len))) TEST_EXIT;
             if(svx_circlebuf_get_data(buf, tmp, data_len)) TEST_EXIT;
             if(test_tcp_check_msg_buf(tmp, data_len, ctx->cmd, ctx->looper_idx, ctx->client_idx)) TEST_CHECK_FAILED;
             ctx->body_idx += data_len;
             if(ctx->body_idx > ctx->body_len) TEST_EXIT;
+            free(tmp);
+            tmp = NULL;
         }
         
         /* send upload response */
@@ -434,7 +457,7 @@ static void test_tcp_client_send_request_header(svx_tcp_connection_t *conn,
 static void test_tcp_client_send_echo_request(svx_tcp_connection_t *conn, test_tcp_client_ctx_t *ctx,
                                               test_tcp_client_info_t *client_info)
 {
-    uint8_t tmp[TEST_TCP_READ_BUF_MAX_LEN];
+    uint8_t *tmp = NULL;
 
     ctx->cmd_send = SVX_TEST_TCP_PROTO_CMD_ECHO;
     ctx->body_len = msg_echo[client_info->looper_idx][client_info->client_idx].len;
@@ -443,8 +466,11 @@ static void test_tcp_client_send_echo_request(svx_tcp_connection_t *conn, test_t
     test_tcp_client_send_request_header(conn, ctx->cmd_send, client_info->looper_idx, client_info->client_idx, ctx->body_len);
     if(ctx->body_len > 0)
     {
+        if(NULL == (tmp = malloc(ctx->body_len))) TEST_EXIT;
         test_tcp_build_msg_buf(tmp, ctx->body_len, ctx->cmd_send, client_info->looper_idx, client_info->client_idx);
         if(svx_tcp_connection_write(conn, tmp, ctx->body_len)) TEST_EXIT;
+        free(tmp);
+        tmp = NULL;
     }
 }
 
@@ -499,12 +525,13 @@ static void test_tcp_client_write_completed_cb(svx_tcp_connection_t *conn, void 
 {
     test_tcp_client_info_t *client_info = (test_tcp_client_info_t *)arg;
     test_tcp_client_ctx_t  *ctx;
-    uint8_t                 tmp[TEST_TCP_WRITE_BUF_HIGH_WATER_MARK - 1];
+    uint8_t                *tmp = NULL;
+    size_t                  tmp_max = TEST_TCP_WRITE_BUF_HIGH_WATER_MARK - 1;
     size_t                  send_len;
 
     svx_tcp_connection_get_context(conn, (void *)&ctx);
 
-    send_len = ((ctx->body_len - ctx->body_idx) > sizeof(tmp) ? sizeof(tmp) : (ctx->body_len - ctx->body_idx));
+    send_len = ((ctx->body_len - ctx->body_idx) > tmp_max ? tmp_max : (ctx->body_len - ctx->body_idx));
     if(0 == send_len || ctx->body_idx + send_len == ctx->body_len)
     {
         /* printf("[%d][%d] send upload request send_len:%zu (%u/%u) [last]\n", client_info->looper_idx, client_info->client_idx, send_len, ctx->body_idx, ctx->body_len); */
@@ -514,9 +541,12 @@ static void test_tcp_client_write_completed_cb(svx_tcp_connection_t *conn, void 
     if(send_len > 0)
     {
         /* printf("[%d][%d] send upload request send_len:%zu (%u/%u)\n", client_info->looper_idx, client_info->client_idx, send_len, ctx->body_idx, ctx->body_len); */
+        if(NULL == (tmp = malloc(send_len))) TEST_EXIT;
         test_tcp_build_msg_buf(tmp, send_len, ctx->cmd_send, client_info->looper_idx, client_info->client_idx);
         if(svx_tcp_connection_write(conn, tmp, send_len)) TEST_EXIT;
         ctx->body_idx += send_len;
+        free(tmp);
+        tmp = NULL;
     }
 }
 
@@ -525,8 +555,10 @@ static void test_tcp_client_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
     test_tcp_client_info_t                *client_info = (test_tcp_client_info_t *)arg;
     test_tcp_client_ctx_t                 *ctx;
     test_tcp_proto_header_t                header;
-    uint8_t                                tmp[TEST_TCP_READ_BUF_MAX_LEN];
+    uint8_t                               *tmp = NULL;
+    size_t                                 tmp_max = TEST_TCP_READ_BUF_MAX_LEN;
     size_t                                 data_len;
+    size_t                                 body_len;
     test_tcp_client_worker_thread_param_t *param = NULL;
 
     svx_tcp_connection_get_context(conn, (void *)&ctx);
@@ -551,8 +583,19 @@ static void test_tcp_client_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
         /* recv echo response (body) */
         if(ctx->body_len > 0)
         {
-            if(svx_circlebuf_get_data(buf, tmp, ctx->body_len)) return; /* have not enough body */
-            if(test_tcp_check_msg_buf(tmp, ctx->body_len, ctx->cmd_recv, client_info->looper_idx, client_info->client_idx)) TEST_CHECK_FAILED;
+            if(svx_circlebuf_get_data_len(buf, &body_len)) TEST_EXIT;
+            if(body_len >= ctx->body_len)
+            {
+                if(NULL == (tmp = malloc(ctx->body_len))) TEST_EXIT;
+                if(svx_circlebuf_get_data(buf, tmp, ctx->body_len)) TEST_EXIT;
+                if(test_tcp_check_msg_buf(tmp, ctx->body_len, ctx->cmd_recv, client_info->looper_idx, client_info->client_idx)) TEST_CHECK_FAILED;
+                free(tmp);
+                tmp = NULL;
+            }
+            else
+            {
+                return; /* have not enough body */
+            }
         }
         ctx->cmd_recv = 0;
         
@@ -589,16 +632,19 @@ static void test_tcp_client_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t 
         /* recv download response (body) */
         if(ctx->body_len != msg_download[client_info->looper_idx][client_info->client_idx].len) TEST_EXIT;
         if(svx_circlebuf_get_data_len(buf, &data_len)) TEST_EXIT;
-        if(data_len > sizeof(tmp)) TEST_EXIT;
+        if(data_len > tmp_max) TEST_EXIT;
         if(0 == ctx->body_idx && 0 == (client_info->client_idx % 2))
             usleep(100 * 1000); /* fill the server-side OS'send buffer (only for test) */
         if(data_len > 0)
         {
             /* read all body from client */
+            if(NULL == (tmp = malloc(data_len))) TEST_EXIT;
             if(svx_circlebuf_get_data(buf, tmp, data_len)) TEST_EXIT;
             if(test_tcp_check_msg_buf(tmp, data_len, ctx->cmd_recv, client_info->looper_idx, client_info->client_idx)) TEST_CHECK_FAILED;
             ctx->body_idx += data_len;
             if(ctx->body_idx > ctx->body_len) TEST_EXIT;
+            free(tmp);
+            tmp = NULL;
         }
         if(ctx->body_idx == ctx->body_len)
         {

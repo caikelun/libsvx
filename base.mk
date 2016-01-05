@@ -6,11 +6,6 @@
 #
 
 build              := r
-prof               := n
-cover              := n
-trapv              := n
-asan               := n
-tsan               := n
 
 PATH_BIN           ?= .
 PATH_SRC           ?= .
@@ -45,30 +40,38 @@ OPTION_MACRO       +=
 OPTION_INC         += $(foreach i,$(PATH_INC),-I$(i))
 OPTION_LIB         += $(foreach i,$(PATH_LIB),-L$(i))
 
-ifeq ($(build),d)
-    OPTION_FLAG       += -O0 -g3
-    ifeq ($(cover),y)
-        OPTION_FLAG   += --coverage
-        OPTION_LDFLAG += --coverage
-    endif
-    ifeq ($(trapv),y)
-        OPTION_FLAG   += -ftrapv
-    endif
-    ifeq ($(asan),y)
-        OPTION_FLAG   += -fsanitize=address -fsanitize=leak -fsanitize=undefined
-        OPTION_LDFLAG += -fsanitize=address -fsanitize=leak -fsanitize=undefined
-    endif
-    ifeq ($(tsan),y)
-        OPTION_FLAG   += -fsanitize=thread -fPIE
-        OPTION_LDFLAG += -fsanitize=thread -fPIE -pie
-    endif
-else
+ifeq ($(build),r)
+    # for release
     OPTION_FLAG       += -O3 -fvisibility=hidden
-    ifeq ($(prof),y)
-        OPTION_FLAG   += -pg
+else
+    # for debug
+    OPTION_FLAG       += -g3
+    ifeq ($(build),prof)
+        OPTION_FLAG   += -pg -O3
         OPTION_LDFLAG += -pg
     endif
+    ifeq ($(build),cover)
+        OPTION_FLAG   += --coverage -O0
+        OPTION_LDFLAG += --coverage
+    endif
+    ifeq ($(build),asan)
+        OPTION_FLAG   += -fsanitize=address -O0
+        OPTION_LDFLAG += -fsanitize=address
+    endif
+    ifeq ($(build),tsan)
+        OPTION_FLAG   += -fsanitize=thread -fPIE -O0
+        OPTION_LDFLAG += -fsanitize=thread -fPIE -pie
+    endif
+    ifeq ($(build),lsan)
+        OPTION_FLAG   += -fsanitize=leak -O0
+        OPTION_LDFLAG += -fsanitize=leak
+    endif
+    ifeq ($(build),usan)
+        OPTION_FLAG   += -fsanitize=undefined -O0
+        OPTION_LDFLAG += -fsanitize=undefined
+    endif
 endif
+
 OPTION_FLAG        += -fPIC -Wall -Wextra -Werror
 OPTION_CFLAG       += $(OPTION_FLAG) -std=c11
 OPTION_CPPFLAG     += $(OPTION_FLAG) -std=c++11
@@ -85,17 +88,17 @@ OPTION_LDFLAG      += -fPIC
 
 .PHONY: all lib stlib dylib clean distclean
 
-ifeq ($(build),d)
-all: $(FILE_EXE)
-stlib: $(FILE_STLIB)
-dylib: $(FILE_DYLIB)
-else
+ifeq ($(build),r)
 all: $(FILE_EXE)
 	$(TOOL_STRIP) --strip-all $(FILE_EXE)
 stlib: $(FILE_STLIB)
 	$(TOOL_STRIP) --strip-debug --strip-unneeded $(FILE_STLIB)
 dylib: $(FILE_DYLIB)
 	$(TOOL_STRIP) --strip-all $(FILE_DYLIB)
+else
+all: $(FILE_EXE)
+stlib: $(FILE_STLIB)
+dylib: $(FILE_DYLIB)
 endif
 
 lib: stlib dylib

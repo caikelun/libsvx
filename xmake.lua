@@ -1,20 +1,52 @@
 set_warnings("all", "error")
-set_languages("c99")
+set_languages("c11")
 
-if modes("debug") then
-    set_symbols("debug")
-    set_optimize("none")
-    add_cxflags("-fsanitize=address", "-fsanitize=leak", "-fsanitize=undefined", "-ftrapv", "-fwrapv")
-    add_ldflags("-fsanitize=address", "-fsanitize=leak", "-fsanitize=undefined")
-    -- add_cxflags("-fsanitize=thread", "-fPIE")
-    -- add_ldflags("-fsanitize=thread", "-fPIE", "-pie")
-end
-
-if modes("release") then
+if modes("r") then
     set_symbols("hidden")
     set_optimize("fastest")
     set_strip("all")
-    -- add_cxflags("-pg")
+end
+
+if modes("prof") then
+    set_symbols("debug")
+    set_optimize("fastest")
+    add_cxflags("-pg")
+    add_ldflags("-pg")
+end
+
+if modes("cover") then
+    set_symbols("debug")
+    set_optimize("none")
+    add_cxflags("--coverage")
+    add_ldflags("--coverage")
+end
+
+if modes("asan") then
+    set_symbols("debug")
+    set_optimize("none")
+    add_cxflags("-fsanitize=address")
+    add_ldflags("-fsanitize=address")
+end
+
+if modes("tsan") then
+    set_symbols("debug")
+    set_optimize("none")
+    add_cxflags("-fsanitize=thread", "-fPIE")
+    add_ldflags("-fsanitize=thread", "-fPIE", "-pie")
+end
+
+if modes("lsan") then
+    set_symbols("debug")
+    set_optimize("none")
+    add_cxflags("-fsanitize=leak")
+    add_ldflags("-fsanitize=leak")
+end
+
+if modes("usan") then
+    set_symbols("debug")
+    set_optimize("none")
+    add_cxflags("-fsanitize=undefined")
+    add_ldflags("-fsanitize=undefined")
 end
 
 -- libsvx.a & libsvx.so

@@ -4,36 +4,6 @@ export build
 endif
 endif
 
-ifdef prof
-ifeq ("$(origin prof)","command line")
-export prof
-endif
-endif
-
-ifdef cover
-ifeq ("$(origin cover)","command line")
-export cover
-endif
-endif
-
-ifdef trapv
-ifeq ("$(origin trapv)","command line")
-export trapv
-endif
-endif
-
-ifdef asan
-ifeq ("$(origin asan)","command line")
-export asan
-endif
-endif
-
-ifdef tsan
-ifeq ("$(origin tsan)","command line")
-export tsan
-endif
-endif
-
 .PHONY: all lib test benchmarks clean distclean doc
 
 all: lib test benchmarks

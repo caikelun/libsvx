@@ -123,7 +123,7 @@ int svx_poller_select_poll(void *self, svx_channel_t **active_channels, size_t a
     else
     {
         tv.tv_sec  = timeout_ms / 1000;
-        tv.tv_usec = timeout_ms % 1000;
+        tv.tv_usec = (timeout_ms % 1000) * 1000;
         timeout    = &tv;
     }
 

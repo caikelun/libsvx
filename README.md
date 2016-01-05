@@ -104,32 +104,34 @@ Website, Clone and Download
 Compile
 -------
 
-libsvx use GCC. The source code compatible with C90, GNU90, C99, GNU99, C11
-and GNU11 standard. C11 is used by default currently.
-
 * Compile using homemade scripts and Makefiles:
 
         Configure : ./configure
-        Compile   : make [prof=y|n]
-                    make build=d [cover=y|n] [trapv=y|n] [asan=y|n] [tsan=y|n]
+        Compile   : make [build=r|prof|cover|asan|tsan|lsan|usan]
         Clean     : make clean
         Clean all : make distclean
 
-        >>> MAKE OPTIONS <<<
-        build = d (debug) | r (release, default) : Build for debug(-O0 -g3) or
-                                                   release (-O3 -fvisibility=hidden, strip).
-        prof  = y (yes)   | n (no, default)      : Build with -pg. (available when build=r)
-        cover = y (yes)   | n (no, default)      : Build with --coverage. (available when build=d)
-        trapv = y (yes)   | n (no, default)      : Build with -ftrapv. (available when build=d)
-        asan  = y (yes)   | n (no, default)      : Build with -fsanitize=address, -fsanitize=leak
-                                                   and -fsanitize=undefined. (available when build=d)
-        tsan  = y (yes) | n (no, default)        : Build with -fsanitize=thread. (available when build=d)
+        >>> OPTIONS <<<
+        build = r (default) : compile with -O3 -fvisibility=hidden
+        build = prof        : compile with -O3 -g3 -pg
+        build = cover       : compile with -O0 -g3 --coverage
+        build = asan        : compile with -O0 -g3 -fsanitize=address
+        build = tsan        : compile with -O0 -g3 -fsanitize=thread -fPIE
+        build = lsan        : compile with -O0 -g3 -fsanitize=leak
+        build = usan        : compile with -O0 -g3 -fsanitize=undefined
 
 * Or, Compile using xmake: ( learn more about xmake: https://github.com/waruqi/xmake )
 
-        Compile : xmake config --mode=release; xmake -r
-                  xmake config --mode=debug; xmake -r
-        Clean   : xmake clean
+        Compile   : xmake
+		            xmake f -c -m r; xmake -r
+                    xmake f -c -m prof; xmake -r
+                    xmake f -c -m cover; xmake -r
+                    xmake f -c -m asan; xmake -r
+                    xmake f -c -m tsan; xmake -r
+                    xmake f -c -m lsan; xmake -r
+                    xmake f -c -m usan; xmake -r
+        Clean     : xmake c
+        Clean all : xmake c -a
 
         >>> NOTICE <<<
         The current ./xmake.lua place all output files to the ./build directory.
@@ -138,26 +140,58 @@ and GNU11 standard. C11 is used by default currently.
 Test
 ----
 
-libsvx have a unit test program in the ./test directory. You can use it in two ways:
+* Test with valgrind:
 
-* Run with valgrind. In this way, first you *MUST* have valgrind installed.
-  Then you can compile the test programe with build=r or build=d. But do *NOT*
-  enable the prof, cover, trapv, asan and tsan options.
-* Run directly. In this way, you can compile the test programe with build=d,
-  then enable cover, trapv, asan or tsan option. Or, you can compile it with
-  build=r, then enable prof option.
+        Compile : make clean; make
+		Run     : sudo ./test/test -g
 
-        Run with valgrind : sudo ./test/test -g
-        Run directly      : sudo ./test/test -d
+* Test with gprof:
 
-        >>> NOTICE <<<
-        The ICMP unit test need ROOT privilege.
+        Compile : make clean; make build=prof
+		Run     : (one of the following:)
+		          ./test/test -q slist
+		          ./test/test -q list
+		          ./test/test -q stailq
+		          ./test/test -q tailq
+		          ./test/test -q splaytree
+		          ./test/test -q rbtree
+		          ./test/test -q log
+		          ./test/test -q threadpool
+		          ./test/test -q notifier
+		          ./test/test -q circlebuf
+		          ./test/test -q PLC
+		          ./test/test -q tcp
+		          ./test/test -q udp
+		          sudo ./test/test -q icmp
+        Profile : gprof -p ./test/test ./gmon.out
+		          (more gprof command ...)
 
-PAY ATTENTION:
+* Test with gcov:
 
-After testing with "tsan=y", your *SHOULD* review each warning very carefully.
-Some of the "data race", in fact, will not cause any error or crash. If you
-try to solve them with mutex or atomic, this will cause performance problems.
+        Compile  : make clean; make build=cover
+		Run      : sudo ./test/test -d
+		Coverage : cd ./src; gcov ./*.c; cd ..
+				   (see ./src/*.c.gcov)
+
+* Test with asan (AddressSanitizer):
+
+        Compile  : make clean; make build=asan
+		Run      : sudo ./test/test -d
+
+* Test with tsan (ThreadSanitizer):
+
+        Compile  : make clean; make build=tsan
+		Run      : sudo ./test/test -d
+
+* Test with lsan (LeakSanitizer):
+
+        Compile  : make clean; make build=lsan
+		Run      : sudo ./test/test -d
+
+* Test with usan (UndefinedBehaviorSanitizer):
+
+        Compile  : make clean; make build=usan
+		Run      : sudo ./test/test -d
 
 
 Samples
