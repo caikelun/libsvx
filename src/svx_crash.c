@@ -378,7 +378,7 @@ static uintptr_t svx_crash_get_pc(ucontext_t *uc)
 
 static void svx_crash_append_registers(svx_crash_buf_t *b, ucontext_t *uc)
 {
-    svx_crash_buf_append_str(&b, SVX_CRASH_OS_ARCH_NOT_SPT);
+    svx_crash_buf_append_str(b, SVX_CRASH_OS_ARCH_NOT_SPT);
 }
 
 #endif
@@ -800,7 +800,7 @@ int svx_crash_set_timezone_mode(svx_crash_timezone_mode_t mode)
 
         snprintf(svx_crash_timezone, sizeof(svx_crash_timezone), "%c%02d%02d",
                  svx_crash_timezone_off < 0 ? '-' : '+', 
-                 abs(svx_crash_timezone_off / 3600), abs(svx_crash_timezone_off % 3600));
+                 abs((int)(svx_crash_timezone_off / 3600)), abs((int)(svx_crash_timezone_off % 3600)));
     }
 
     return 0;
