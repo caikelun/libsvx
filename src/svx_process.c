@@ -633,7 +633,7 @@ int svx_process_start()
     }
 
  end:
-    if(svx_process_obj.pid_file[0] && svx_process_obj.pid_fd >= 0)
+    if('\0' != svx_process_obj.pid_file[0] && svx_process_obj.pid_fd >= 0)
         if(0 != (r2 = svx_util_pid_file_close(svx_process_obj.pid_file, &(svx_process_obj.pid_fd))))
             SVX_LOG_ERRNO_ERR(r2, NULL);
 

@@ -46,6 +46,9 @@ ifeq ($(build),r)
 else
     # for debug
     OPTION_FLAG       += -g3
+    ifeq ($(build),d)
+        OPTION_FLAG   += -O0
+    endif
     ifeq ($(build),prof)
         OPTION_FLAG   += -pg -O3
         OPTION_LDFLAG += -pg

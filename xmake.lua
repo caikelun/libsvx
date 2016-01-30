@@ -52,8 +52,9 @@ end
 -- libsvx.a & libsvx.so
 add_target("svx")
 set_kind("$(kind)")
+set_headerdir("$(buildir)/include")
 set_objectdir("$(buildir)/.objs")
-add_headers("src/*.h")
+add_headers("src/(*.h)")
 add_files("src/*.c")
 set_config_h("src/svx_auto_config.h")
 set_config_h_prefix("SVX")

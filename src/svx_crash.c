@@ -22,18 +22,16 @@
 #include <ucontext.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
 #include "svx_crash.h"
 #include "svx_log.h"
 #include "svx_errno.h"
 #include "svx_util.h"
 
-#define SVX_CRASH_OS_ARCH_NOT_SPT "Dumping not supported for this OS/arch\n"
+#define SVX_CRASH_OS_ARCH_NOT_SPT "OS/arch not supported\n"
 #define SVX_CRASH_DEFAULT_DIRNAME "./"
 #define SVX_CRASH_DEFAULT_SUFFIX  "crash"
 #define SVX_CRASH_DELIMITER       "**********************************************************************\n"
-
-/* SIGSTKSZ is large enough? That's not the truth. */
-static uint8_t                    svx_crash_stack[SIGSTKSZ * 10];
 
 static struct sigaction           svx_crash_old_sigact_segv;
 static struct sigaction           svx_crash_old_sigact_fpe;
@@ -56,6 +54,7 @@ static char                       svx_crash_prefix[NAME_MAX]        = "\0";
 static char                       svx_crash_suffix[NAME_MAX]        = "\0";
 static char                       svx_crash_pattern[NAME_MAX]       = "\0";
 static size_t                     svx_crash_max_dumps               = 0;
+static uint8_t                    svx_crash_stack[SIGSTKSZ * 10];
 
 /**********************************************************************/
 /* svx_crash_time2tm() - convert time_t to struct tm
@@ -446,8 +445,10 @@ static void svx_crash_write_sysinfo(int fd, const char *path)
 static void svx_crash_write_baseinfo(int fd, ucontext_t *uc, int sig, siginfo_t *info,
                                      struct tm *tm, struct timespec *tp)
 {
-    char            buf[10240] = "\0";
-    svx_crash_buf_t b          = SVX_CRASH_BUF_INITIALIZER;
+    char            buf[1024] = "\0";
+    svx_crash_buf_t b         = SVX_CRASH_BUF_INITIALIZER;
+    pid_t           pid       = getpid();
+    pid_t           tid       = syscall(SYS_gettid);
 
     SVX_UTIL_UNUSED(uc);
     
@@ -479,15 +480,40 @@ static void svx_crash_write_baseinfo(int fd, ucontext_t *uc, int sig, siginfo_t 
     svx_crash_buf_append_str (&b, svx_crash_hostname);
 
     /* append PID */
-    svx_crash_buf_append_str (&b, ", PID: ");
-    svx_crash_buf_append_uint(&b, getpid(), 10, 0);
-    svx_crash_buf_append_str (&b, "\n");
+    svx_crash_buf_append_str (&b, "\nPID: ");
+    svx_crash_buf_append_uint(&b, pid, 10, 0);
+    svx_crash_buf_append_str (&b, ", Pname: ");
+    svx_crash_write_buf(fd, svx_crash_buf_get_buf(&b), svx_crash_buf_get_buflen(&b));
+    svx_crash_buf_reset(&b);
+    
+    /* append Pname */
+    svx_crash_buf_append_str (&b, "/proc/");
+    svx_crash_buf_append_uint(&b, pid, 10, 0);
+    svx_crash_buf_append_str (&b, "/comm");
+    svx_crash_write_sysinfo(fd, svx_crash_buf_get_buf(&b));
+    svx_crash_buf_reset(&b);
+    
+    /* append TID */
+    svx_crash_buf_append_str (&b, "TID: ");
+    svx_crash_buf_append_uint(&b, tid, 10, 0);
+    svx_crash_buf_append_str (&b, ", Tname: ");
+    svx_crash_write_buf(fd, svx_crash_buf_get_buf(&b), svx_crash_buf_get_buflen(&b));
+    svx_crash_buf_reset(&b);
+
+    /* append Tname */
+    svx_crash_buf_append_str (&b, "/proc/");
+    svx_crash_buf_append_uint(&b, pid, 10, 0);
+    svx_crash_buf_append_str (&b, "/task/");
+    svx_crash_buf_append_uint(&b, tid, 10, 0);
+    svx_crash_buf_append_str (&b, "/comm");
+    svx_crash_write_sysinfo(fd, svx_crash_buf_get_buf(&b));
+    svx_crash_buf_reset(&b);
 
     /* append signal & code */
 #define SVX_CRASH_CASE_SIGNAL(signal)                                   \
     case signal:                                                        \
         svx_crash_buf_append_str(&b, " ("#signal"), Code: ");           \
-        svx_crash_buf_append_int(&b, (uintmax_t)(info->si_code), 10, 0)
+        svx_crash_buf_append_int(&b, (intmax_t)(info->si_code), 10, 0)
 #define SVX_CRASH_CASE_CODE(code)                                       \
     case code:                                                          \
         svx_crash_buf_append_str(&b, " ("#code")");                     \
@@ -605,8 +631,8 @@ static void svx_crash_write_baseinfo(int fd, ucontext_t *uc, int sig, siginfo_t 
 
 static void svx_crash_write_registers(int fd, ucontext_t *uc)
 {
-    char            buf[10240] = "\0";
-    svx_crash_buf_t b          = SVX_CRASH_BUF_INITIALIZER;
+    char            buf[1024] = "\0";
+    svx_crash_buf_t b         = SVX_CRASH_BUF_INITIALIZER;
     
     svx_crash_buf_init(&b, buf, sizeof(buf));
 
@@ -642,20 +668,19 @@ static void svx_crash_sigaction(int sig, siginfo_t *info, void *secret)
     struct timespec  tp;
     struct tm        tm;
     int              fd = -1;
-    char             buf[10240] = "\0";
+    char             buf[PATH_MAX] = "\0";
     svx_crash_buf_t  b = SVX_CRASH_BUF_INITIALIZER;
 
     /* restore the old sigactions */
     svx_crash_uregister_signal_handler();
-    
-    svx_crash_buf_init(&b, buf, sizeof(buf));
-    
+        
     /* crrent time */
     memset(&tm, 0, sizeof(tm));
     clock_gettime(CLOCK_REALTIME, &tp);
     svx_crash_time2tm(&(tp.tv_sec), svx_crash_timezone_off, &tm);
 
     /* create and open dump file */
+    svx_crash_buf_init(&b, buf, sizeof(buf));
     svx_crash_buf_append_str (&b, svx_crash_dirname);
     svx_crash_buf_append_str (&b, svx_crash_prefix);
     svx_crash_buf_append_str (&b, ".");
@@ -736,6 +761,7 @@ static void svx_crash_remove_older_dumps()
     {
         while(n--)
         {
+            if(NULL == entry[n] || NULL == entry[n]->d_name) continue;
             snprintf(pathname, sizeof(pathname), "%s%s", svx_crash_dirname, entry[n]->d_name);
             free(entry[n]);
             if(0 != lstat(pathname, &st)) continue;
@@ -792,15 +818,11 @@ int svx_crash_set_timezone_mode(svx_crash_timezone_mode_t mode)
         if(0 != gettimeofday(&tv, NULL)) SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
         if(NULL == localtime_r((time_t*)(&(tv.tv_sec)), &tm)) SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
 
-#ifdef __USE_BSD
         svx_crash_timezone_off = tm.tm_gmtoff;
-#else
-        svx_crash_timezone_off = tm.__tm_gmtoff;
-#endif
-
-        snprintf(svx_crash_timezone, sizeof(svx_crash_timezone), "%c%02d%02d",
+        
+        snprintf(svx_crash_timezone, sizeof(svx_crash_timezone), "%c%02ld%02ld",
                  svx_crash_timezone_off < 0 ? '-' : '+', 
-                 abs((int)(svx_crash_timezone_off / 3600)), abs((int)(svx_crash_timezone_off % 3600)));
+                 labs(svx_crash_timezone_off / 3600), labs(svx_crash_timezone_off % 3600));
     }
 
     return 0;

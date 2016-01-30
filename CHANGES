@@ -1,3 +1,11 @@
+2016-01-30  caikelun  <caikelun@gmail.com>
+
+  * Fix some errors in svx_crash.c, svx_process.c, svx_log.c and svx_tree.h by Domingo Alvarez Duarte <mingodad@gmail.com>.
+  * Fix some config error in xmake.lua.
+  * Improving compatibility with various versions of GCC.
+  * Add process name and thread name to dump file in svx_crash.c.
+  * Version 0.0.8
+
 2016-01-05  caikelun  <caikelun@gmail.com>
 
   * Fix compiler options.

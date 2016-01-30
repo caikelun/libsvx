@@ -16,6 +16,7 @@
 #include <limits.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <pthread.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -60,7 +61,8 @@ void cb(int fd, void *arg)
     /* append any messages to the dump file */
     if(fd >= 0)
     {
-        write(fd, TEST_CRASH_EXTRA_MSG, test_crash_extra_msg_len);
+        if(write(fd, TEST_CRASH_EXTRA_MSG, test_crash_extra_msg_len) < 0)
+            return;
     }
 
     /* do any thing your want, 
@@ -91,6 +93,7 @@ int test_crash_do()
     /* let the gcc's ThreadSanitizer print messages to stderr */
     /* fclose(stderr); */
     
+    pthread_setname_np(pthread_self(), "test_thd_name");
     return aa();
 }
 

@@ -112,7 +112,7 @@ Compile
         Clean all : make distclean
 
         >>> OPTIONS <<<
-        build = r (default) : compile with -O3 -fvisibility=hidden
+        build = r (default) : compile with -O3 -fvisibility=hidden, then strip
         build = prof        : compile with -O3 -g3 -pg
         build = cover       : compile with -O0 -g3 --coverage
         build = asan        : compile with -O0 -g3 -fsanitize=address
@@ -123,7 +123,7 @@ Compile
 * Or, Compile using xmake: ( learn more about xmake: https://github.com/waruqi/xmake )
 
         Compile   : xmake
-		            xmake f -c -m r; xmake -r
+                    xmake f -c -m r; xmake -r
                     xmake f -c -m prof; xmake -r
                     xmake f -c -m cover; xmake -r
                     xmake f -c -m asan; xmake -r
@@ -143,72 +143,72 @@ Test
 * Test with valgrind:
 
         Compile : make clean; make
-		Run     : sudo ./test/test -g
+        Run     : sudo ./test/test -g
 
 * Test with gprof:
 
         Compile : make clean; make build=prof
-		Run     : (one of the following:)
-		          ./test/test -q slist
-		          ./test/test -q list
-		          ./test/test -q stailq
-		          ./test/test -q tailq
-		          ./test/test -q splaytree
-		          ./test/test -q rbtree
-		          ./test/test -q log
-		          ./test/test -q threadpool
-		          ./test/test -q notifier
-		          ./test/test -q circlebuf
-		          ./test/test -q PLC
-		          ./test/test -q tcp
-		          ./test/test -q udp
-		          sudo ./test/test -q icmp
+        Run     : (one of the following:)
+                  ./test/test -q slist
+                  ./test/test -q list
+                  ./test/test -q stailq
+                  ./test/test -q tailq
+                  ./test/test -q splaytree
+                  ./test/test -q rbtree
+                  ./test/test -q log
+                  ./test/test -q threadpool
+                  ./test/test -q notifier
+                  ./test/test -q circlebuf
+                  ./test/test -q PLC
+                  ./test/test -q tcp
+                  ./test/test -q udp
+                  sudo ./test/test -q icmp
         Profile : gprof -p ./test/test ./gmon.out
-		          (more gprof command ...)
+                  (more gprof command ...)
 
 * Test with gcov:
 
         Compile  : make clean; make build=cover
-		Run      : sudo ./test/test -d
-		Coverage : cd ./src; gcov ./*.c; cd ..
-				   (see ./src/*.c.gcov)
+        Run      : sudo ./test/test -d
+        Coverage : cd ./src; gcov ./*.c; cd ..
+                   (see ./src/*.c.gcov)
 
 * Test with asan (AddressSanitizer):
 
         Compile  : make clean; make build=asan
-		Run      : sudo ./test/test -d
+        Run      : sudo ./test/test -d
 
 * Test with tsan (ThreadSanitizer):
 
         Compile  : make clean; make build=tsan
-		Run      : sudo ./test/test -d
+        Run      : sudo ./test/test -d
 
 * Test with lsan (LeakSanitizer):
 
         Compile  : make clean; make build=lsan
-		Run      : sudo ./test/test -d
+        Run      : sudo ./test/test -d
 
 * Test with usan (UndefinedBehaviorSanitizer):
 
         Compile  : make clean; make build=usan
-		Run      : sudo ./test/test -d
+        Run      : sudo ./test/test -d
 
 
 Samples
 -------
 
 * benchmarks/httpserver/main.c
-* test/
+* test/*.c
 
 
 Documents
 ---------
 
-Build local documents from source code use doxygen:
+* Build local documents from source code via doxygen:
 
-    make doc
+        make doc
 
-Visit online documents:
+* Visit online documents on:
 
 http://caikelun.github.io/proj/libsvx/doxy/index.html
 

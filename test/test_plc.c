@@ -550,7 +550,8 @@ static int test_plc_timer_do()
 {
     int            r = 1;
     size_t         i = 0;
-    pthread_t      thd_loop, thd_add_timer = 0;
+    pthread_t      thd_loop, thd_add_timer;
+    int            thd_add_timer_created = 0;
     struct timeval now;
     int64_t        now_ms;
 
@@ -600,6 +601,7 @@ static int test_plc_timer_do()
         printf("pthread_create() failed\n");
         goto end;
     }
+    thd_add_timer_created = 1;
 
     /* run after */
     if(0 != svx_looper_run_after(test_loopertimer_looper, test_loopertimer_task_single, NULL,
@@ -717,9 +719,9 @@ static int test_plc_timer_do()
     r = 0; /* OK */
 
  end:
-    if(thd_add_timer)
+    if(thd_add_timer_created)
     {
-	    pthread_join(thd_add_timer, NULL);
+        pthread_join(thd_add_timer, NULL);
     }
     if(test_loopertimer_looper)
     {
