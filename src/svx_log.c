@@ -644,9 +644,9 @@ int svx_log_set_timezone_mode(svx_log_timezone_mode_t mode)
         if(NULL == localtime_r((time_t*)(&(tv.tv_sec)), &tm)) SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
         snprintf(svx_log_timezone, sizeof(svx_log_timezone), "%c%02d%02d",
 #ifdef __USE_BSD
-                 tm.tm_gmtoff < 0 ? '-' : '+', abs(tm.tm_gmtoff / 3600), abs(tm.tm_gmtoff % 3600)
+                 tm.tm_gmtoff < 0 ? '-' : '+', abs((int)(tm.tm_gmtoff / 3600)), abs((int)(tm.tm_gmtoff % 3600))
 #else
-                 tm.__tm_gmtoff < 0 ? '-' : '+', abs(tm.__tm_gmtoff / 3600), abs(tm.__tm_gmtoff % 3600)
+                 tm.__tm_gmtoff < 0 ? '-' : '+', abs((int)(tm.__tm_gmtoff / 3600)), abs((int)(tm.__tm_gmtoff % 3600))
 #endif
                  );        
     }

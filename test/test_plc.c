@@ -550,7 +550,7 @@ static int test_plc_timer_do()
 {
     int            r = 1;
     size_t         i = 0;
-    pthread_t      thd_loop, thd_add_timer;
+    pthread_t      thd_loop, thd_add_timer = 0;
     struct timeval now;
     int64_t        now_ms;
 
@@ -717,7 +717,10 @@ static int test_plc_timer_do()
     r = 0; /* OK */
 
  end:
-    pthread_join(thd_add_timer, NULL);    
+    if(thd_add_timer)
+    {
+	    pthread_join(thd_add_timer, NULL);
+    }
     if(test_loopertimer_looper)
     {
         if(0 != svx_looper_destroy(&test_loopertimer_looper) || NULL != test_loopertimer_looper)

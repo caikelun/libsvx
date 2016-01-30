@@ -31,7 +31,9 @@
 #define SVX_TREE_H
 
 /* #include <sys/cdefs.h> */
+#ifndef __unused
 #define __unused __attribute__((__unused__))
+#endif
 
 /*
  * This file defines data structures for different types of trees:
