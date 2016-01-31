@@ -78,7 +78,7 @@ static void test_show_help(char *exe_pathname)
     
     printf("\n"                                                         \
            "USAGE:\n"                                                   \
-           "  %s -h | -g [TEST-NAME] | -d [TEST-NAME]\n"                \
+           "  %s -h | -g [TEST-NAME] | -d [TEST-NAME] | -q TEST-NAME\n" \
            "\n"                                                         \
            "DESCRIPTION:\n"                                             \
            "  Run test specified by TEST-NAME, or all tests if without TEST-NAME.\n" \
@@ -86,7 +86,8 @@ static void test_show_help(char *exe_pathname)
            "OPTIONS:\n"                                                 \
            "  -h  Show this help\n"                                     \
            "  -g  Run test via valgrind\n"                              \
-           "  -d  Run test directly (without valgrind)\n"               \
+           "  -d  Run test directly (without valgrind, but still with a parent process)\n" \
+           "  -q  Run test directly and quiet (without valgrind and parent process)\n" \
            "\n"                                                         \
            "available TEST-NAME:\n", basename(exe_pathname));
     while(test_infos[++i].name)
@@ -298,7 +299,8 @@ int main(int argc, char **argv)
         if(0 == strcmp(argv[1], "-g"))
             return test_run_valgrind_all(argv[0]);
         else if(0 == strcmp(argv[1], "-d"))
-            return test_run_directly_all(argv[0]);    }
+            return test_run_directly_all(argv[0]);
+    }
     else if(argc == 3)
     {
         if(0 == strcmp(argv[1], "-g"))

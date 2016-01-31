@@ -107,12 +107,13 @@ Compile
 * Compile using homemade scripts and Makefiles:
 
         Configure : ./configure
-        Compile   : make [build=r|prof|cover|asan|tsan|lsan|usan]
+        Compile   : make [build=r|d|prof|cover|asan|tsan|lsan|usan]
         Clean     : make clean
         Clean all : make distclean
 
         >>> OPTIONS <<<
         build = r (default) : compile with -O3 -fvisibility=hidden, then strip
+        build = d           : compile with -O0 -g3
         build = prof        : compile with -O3 -g3 -pg
         build = cover       : compile with -O0 -g3 --coverage
         build = asan        : compile with -O0 -g3 -fsanitize=address
@@ -123,13 +124,14 @@ Compile
 * Or, Compile using xmake: ( learn more about xmake: https://github.com/waruqi/xmake )
 
         Compile   : xmake
-                    xmake f -c -m r; xmake -r
-                    xmake f -c -m prof; xmake -r
-                    xmake f -c -m cover; xmake -r
-                    xmake f -c -m asan; xmake -r
-                    xmake f -c -m tsan; xmake -r
-                    xmake f -c -m lsan; xmake -r
-                    xmake f -c -m usan; xmake -r
+                    xmake f -c -m r     ; xmake -r
+                    xmake f -c -m d     ; xmake -r
+                    xmake f -c -m prof  ; xmake -r
+                    xmake f -c -m cover ; xmake -r
+                    xmake f -c -m asan  ; xmake -r
+                    xmake f -c -m tsan  ; xmake -r
+                    xmake f -c -m lsan  ; xmake -r
+                    xmake f -c -m usan  ; xmake -r
         Clean     : xmake c
         Clean all : xmake c -a
 

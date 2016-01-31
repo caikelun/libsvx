@@ -7,6 +7,11 @@ if modes("r") then
     set_strip("all")
 end
 
+if modes("d") then
+    set_symbols("debug")
+    set_optimize("none")
+end
+
 if modes("prof") then
     set_symbols("debug")
     set_optimize("fastest")
