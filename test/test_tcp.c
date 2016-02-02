@@ -25,6 +25,7 @@
 #define TEST_TCP_LISTEN_IPV4               "127.0.0.1"
 #define TEST_TCP_LISTEN_IPV6               "::1"
 #define TEST_TCP_LISTEN_PORT               20000
+#define TEST_TCP_LISTEN_PORT2              20001
 
 #define TEST_TCP_READ_BUF_MIN_LEN          128
 #define TEST_TCP_READ_BUF_MAX_LEN          (16 * 1024)
@@ -203,7 +204,17 @@ static void test_tcp_server_established_cb(svx_tcp_connection_t *conn, void *arg
     test_tcp_server_ctx_t *ctx;
 
     SVX_UTIL_UNUSED(arg);
-    
+
+    /*
+    svx_inetaddr_t local_addr, peer_addr;
+    char local_addr_str[SVX_INETADDR_STR_ADDR_LEN], peer_addr_str[SVX_INETADDR_STR_ADDR_LEN];
+    if(svx_tcp_connection_get_local_addr(conn, &local_addr)) TEST_EXIT;
+    if(svx_tcp_connection_get_peer_addr(conn, &peer_addr)) TEST_EXIT;
+    if(svx_inetaddr_get_addr_str(&local_addr, local_addr_str, sizeof(local_addr_str))) TEST_EXIT;
+    if(svx_inetaddr_get_addr_str(&peer_addr, peer_addr_str, sizeof(peer_addr_str))) TEST_EXIT;
+    printf("%s -> %s\n", peer_addr_str, local_addr_str);
+    */
+
     if(NULL == (ctx = calloc(1, sizeof(test_tcp_server_ctx_t)))) TEST_EXIT;
     svx_tcp_connection_set_context(conn, ctx);
 
@@ -409,6 +420,7 @@ static void test_tcp_server_closed_cb(svx_tcp_connection_t *conn, void *arg)
 static void *test_tcp_server_main_thd(void *arg)
 {
     svx_inetaddr_t     listen_addr;
+    svx_inetaddr_t     listen_addr2;
     test_tcp_server_t *server = &test_tcp_server;
 
     SVX_UTIL_UNUSED(arg);
@@ -421,7 +433,9 @@ static void *test_tcp_server_main_thd(void *arg)
 
     /* create TCP server */
     if(svx_inetaddr_from_ipport(&listen_addr, test_tcp_server.ip, TEST_TCP_LISTEN_PORT)) TEST_EXIT;
+    if(svx_inetaddr_from_ipport(&listen_addr2, test_tcp_server.ip, TEST_TCP_LISTEN_PORT2)) TEST_EXIT;
     if(svx_tcp_server_create(&(server->tcp_server), server->looper, listen_addr)) TEST_EXIT;
+    if(svx_tcp_server_add_listener(server->tcp_server, listen_addr2)) TEST_EXIT;
     if(svx_tcp_server_set_io_loopers_num(server->tcp_server, server->io_loopers_num)) TEST_EXIT;
     if(svx_tcp_server_set_keepalive(server->tcp_server, 10, 1, 3)) TEST_EXIT;
     if(svx_tcp_server_set_read_buf_len(server->tcp_server, TEST_TCP_READ_BUF_MIN_LEN, TEST_TCP_READ_BUF_MAX_LEN)) TEST_EXIT;
@@ -709,6 +723,7 @@ static void *test_tcp_client_main_thd(void *arg)
 {
     int                     looper_idx = (int)((intptr_t)arg);
     svx_inetaddr_t          listen_addr;
+    svx_inetaddr_t          listen_addr2;
     test_tcp_client_t      *client = &(test_tcp_clients[looper_idx]);
     test_tcp_client_info_t *client_info;
     int                     i;
@@ -720,6 +735,7 @@ static void *test_tcp_client_main_thd(void *arg)
     if(svx_looper_create(&(client->looper))) TEST_EXIT;
 
     if(svx_inetaddr_from_ipport(&listen_addr, test_tcp_server.ip, TEST_TCP_LISTEN_PORT)) TEST_EXIT;
+    if(svx_inetaddr_from_ipport(&listen_addr2, test_tcp_server.ip, TEST_TCP_LISTEN_PORT2)) TEST_EXIT;
     if(NULL == (client->tcp_client = (svx_tcp_client_t **)malloc(sizeof(svx_tcp_client_t *) * TEST_TCP_CLIENT_CNT_PER_LOOPER))) TEST_EXIT;
     client->tcp_clients_alive_cnt = TEST_TCP_CLIENT_CNT_PER_LOOPER;
     for(i = 0; i < TEST_TCP_CLIENT_CNT_PER_LOOPER; i++)
@@ -729,7 +745,7 @@ static void *test_tcp_client_main_thd(void *arg)
         client_info->client_idx = i;
         
         /* create TCP client */
-        if(svx_tcp_client_create(&(client->tcp_client[i]), client->looper, listen_addr)) TEST_EXIT;
+        if(svx_tcp_client_create(&(client->tcp_client[i]), client->looper, looper_idx % 2 ? listen_addr : listen_addr2)) TEST_EXIT;
         if(svx_tcp_client_set_reconnect_delay(client->tcp_client[i], 300, 5000)) TEST_EXIT;
         if(svx_tcp_client_set_read_buf_len(client->tcp_client[i], TEST_TCP_READ_BUF_MIN_LEN, TEST_TCP_READ_BUF_MAX_LEN)) TEST_EXIT;
         if(svx_tcp_client_set_write_buf_len(client->tcp_client[i], TEST_TCP_WRITE_BUF_MIN_LEN)) TEST_EXIT;

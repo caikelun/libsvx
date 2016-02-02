@@ -167,6 +167,26 @@ extern int svx_tcp_connection_destroy(svx_tcp_connection_t *self);
 extern int svx_tcp_connection_start(svx_tcp_connection_t *self);
 
 /*!
+ * Get local address.
+ *
+ * \param[in]  self  The address of the TCP connection.
+ * \param[out] addr  Return local address.
+ *
+ * \return  On success, return zero; on error, return an error number greater than zero.
+ */
+extern int svx_tcp_connection_get_local_addr(svx_tcp_connection_t *self, svx_inetaddr_t *addr);
+
+/*!
+ * Get peer address.
+ *
+ * \param[in]  self  The address of the TCP connection.
+ * \param[out] addr  Return peer address.
+ *
+ * \return  On success, return zero; on error, return an error number greater than zero.
+ */
+extern int svx_tcp_connection_get_peer_addr(svx_tcp_connection_t *self, svx_inetaddr_t *addr);
+
+/*!
  * Get the user private data.
  *
  * \warning  This function is for internal use.

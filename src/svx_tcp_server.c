@@ -18,6 +18,7 @@
 #include "svx_tcp_acceptor.h"
 #include "svx_tcp_connection.h"
 #include "svx_tree.h"
+#include "svx_queue.h"
 #include "svx_inetaddr.h"
 #include "svx_errno.h"
 #include "svx_log.h"
@@ -41,11 +42,19 @@ static __inline__ int svx_tcp_connection_node_cmp(svx_tcp_connection_node_t *a, 
 typedef RB_HEAD(svx_tcp_connection_tree, svx_tcp_connection_node) svx_tcp_connection_tree_t;
 RB_GENERATE_STATIC(svx_tcp_connection_tree, svx_tcp_connection_node, link, svx_tcp_connection_node_cmp)
 
+/* TCP listener's queue */
+typedef struct svx_tcp_server_listener
+{
+    svx_inetaddr_t      listen_addr;
+    svx_tcp_acceptor_t *acceptor;
+    TAILQ_ENTRY(svx_tcp_server_listener,) link;
+} svx_tcp_server_listener_t;
+typedef TAILQ_HEAD(svx_tcp_server_listener_queue, svx_tcp_server_listener,) svx_tcp_server_listener_queue_t;
+
 struct svx_tcp_server
 {
+    svx_tcp_server_listener_queue_t  listeners;
     svx_tcp_connection_tree_t        conns;
-    svx_inetaddr_t                   listen_addr;
-    svx_tcp_acceptor_t              *acceptor;
     svx_looper_t                    *base_looper;
     pthread_t                       *io_threads;
     svx_looper_t                   **io_loopers;
@@ -156,9 +165,8 @@ int svx_tcp_server_create(svx_tcp_server_t **self, svx_looper_t *looper, svx_ine
     if(NULL == self || NULL == looper) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p, looper:%p\n", self, looper);
 
     if(NULL == (*self = malloc(sizeof(svx_tcp_server_t)))) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_NOMEM, NULL);
+    TAILQ_INIT(&((*self)->listeners));
     RB_INIT(&((*self)->conns));
-    (*self)->listen_addr                    = listen_addr;
-    (*self)->acceptor                       = NULL;
     (*self)->base_looper                    = looper;
     (*self)->io_threads                     = NULL;
     (*self)->io_loopers                     = NULL;
@@ -174,15 +182,13 @@ int svx_tcp_server_create(svx_tcp_server_t **self, svx_looper_t *looper, svx_ine
     (*self)->if_reuse_port                  = 0;
     memset(&((*self)->callbacks), 0, sizeof((*self)->callbacks));
 
-    if(0 != (r = svx_tcp_acceptor_create(&((*self)->acceptor), looper, &((*self)->listen_addr), svx_tcp_server_handle_accepted, *self)))
-        SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
-
+    if(0 != (r = svx_tcp_server_add_listener(*self, listen_addr))) SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
+        
     return 0;
 
  err:
     if(NULL != *self)
     {
-        if(NULL != (*self)->acceptor) svx_tcp_acceptor_destroy(&((*self)->acceptor));
         free(*self);
         *self = NULL;
     }
@@ -192,13 +198,58 @@ int svx_tcp_server_create(svx_tcp_server_t **self, svx_looper_t *looper, svx_ine
 
 int svx_tcp_server_destroy(svx_tcp_server_t **self)
 {
+    svx_tcp_server_listener_t *listener = NULL, *listener_tmp = NULL;
+
     if(NULL == self)  SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p\n", self);
     if(NULL == *self) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "*self:%p\n", *self);
 
-    svx_tcp_acceptor_destroy(&((*self)->acceptor));
+    TAILQ_FOREACH_FROM_SAFE(listener, &((*self)->listeners), link, listener_tmp)
+    {
+        TAILQ_REMOVE(&((*self)->listeners), listener, link);
+        svx_tcp_acceptor_destroy(&(listener->acceptor));
+        free(listener);
+        listener = NULL;
+    }
+    
     free(*self);
     *self = NULL;
     return 0;
+}
+
+int svx_tcp_server_add_listener(svx_tcp_server_t *self, svx_inetaddr_t listen_addr)
+{
+    svx_tcp_server_listener_t *listener = NULL;
+    char                       addr1[SVX_INETADDR_STR_ADDR_LEN];
+    char                       addr2[SVX_INETADDR_STR_ADDR_LEN];
+    int                        r;
+    
+    if(NULL == self) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p\n", self);
+
+    /* Check for duplicate addresses */
+    TAILQ_FOREACH(listener, &(self->listeners), link)
+    {
+        if(0 == svx_inetaddr_cmp_addr(&(listener->listen_addr), &listen_addr))
+        {
+            svx_inetaddr_get_addr_str(&(listener->listen_addr), addr1, sizeof(addr1));
+            svx_inetaddr_get_addr_str(&listen_addr, addr2, sizeof(addr2));
+            SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_REPEAT, "existent: %s, duplicate: %s\n", addr1, addr2);
+        }
+    }
+
+    /* Add a new listener */
+    if(NULL == (listener = malloc(sizeof(svx_tcp_server_listener_t))))
+        SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_NOMEM, NULL);
+    listener->listen_addr = listen_addr;
+    listener->acceptor    = NULL;
+    if(0 != (r = svx_tcp_acceptor_create(&(listener->acceptor), self->base_looper, &(listener->listen_addr), svx_tcp_server_handle_accepted, self)))
+        SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
+    TAILQ_INSERT_TAIL(&(self->listeners), listener, link);
+
+    return 0;
+
+ err:
+    if(NULL != listener) free(listener);
+    return r;
 }
 
 int svx_tcp_server_set_io_loopers_num(svx_tcp_server_t *self, int io_loopers_num)
@@ -320,8 +371,9 @@ static void *svx_tcp_server_io_loopers_func(void *arg)
 SVX_LOOPER_GENERATE_RUN_1(svx_tcp_server_start, svx_tcp_server_t *, self)
 int svx_tcp_server_start(svx_tcp_server_t *self)
 {
-    uint16_t i;
-    int      r;
+    svx_tcp_server_listener_t *listener = NULL;
+    uint16_t                   i;
+    int                        r;
 
     if(NULL == self) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p\n", self);
 
@@ -354,7 +406,9 @@ int svx_tcp_server_start(svx_tcp_server_t *self)
         }
     }
 
-    if(0 != (r = svx_tcp_acceptor_start(self->acceptor, self->if_reuse_port))) SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
+    TAILQ_FOREACH(listener, &(self->listeners), link)
+        if(0 != (r = svx_tcp_acceptor_start(listener->acceptor, self->if_reuse_port)))
+            SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
 
     return 0;
 
@@ -380,6 +434,7 @@ int svx_tcp_server_start(svx_tcp_server_t *self)
 SVX_LOOPER_GENERATE_RUN_1(svx_tcp_server_stop, svx_tcp_server_t *, self)
 int svx_tcp_server_stop(svx_tcp_server_t *self)
 {
+    svx_tcp_server_listener_t *listener = NULL;
     svx_tcp_connection_node_t *node     = NULL;
     svx_tcp_connection_node_t *node_tmp = NULL;
     int                        i;
@@ -389,7 +444,9 @@ int svx_tcp_server_stop(svx_tcp_server_t *self)
 
     SVX_LOOPER_CHECK_DISPATCH_HELPER_1(self->base_looper, svx_tcp_server_stop, self);
 
-    if(0 != (r = svx_tcp_acceptor_stop(self->acceptor))) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
+    TAILQ_FOREACH(listener, &(self->listeners), link)
+        if(0 != (r = svx_tcp_acceptor_stop(listener->acceptor)))
+            SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
 
     RB_FOREACH_SAFE(node, svx_tcp_connection_tree, &(self->conns), node_tmp)
     {

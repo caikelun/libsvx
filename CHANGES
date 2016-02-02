@@ -1,3 +1,12 @@
+2016-02-02  caikelun  <caikelun@gmail.com>
+
+  * Fix a bug about checking ports equality in svx_inetaddr.
+  * Fix a bug about checking TCP self-connection in svx_tcp_connector.
+  * Add multiple listeners support in svx_tcp_server.
+  * Add an new make target for debug.
+  * Add some message in test/test.c.
+  * Version 0.0.9
+
 2016-01-30  caikelun  <caikelun@gmail.com>
 
   * Fix some errors in svx_crash.c, svx_process.c, svx_log.c and svx_tree.h by Domingo Alvarez Duarte <mingodad@gmail.com>.

@@ -162,7 +162,7 @@ static void svx_tcp_connector_handle_write(void *arg)
     /* check TCP self-connection */
     if(0 != (r = svx_inetaddr_from_fd_local(&client_addr, self->fd)))
         SVX_LOG_ERRNO_GOTO_ERR(retry, r, NULL);
-    if(0 != svx_inetaddr_cmp_addr(&client_addr, self->server_addr)) goto retry;
+    if(0 == svx_inetaddr_cmp_addr(&client_addr, self->server_addr)) goto retry;
 
     /* the task has been successfully completed */
     self->state = SVX_TCP_CONNECTOR_STATE_CONNECTED;

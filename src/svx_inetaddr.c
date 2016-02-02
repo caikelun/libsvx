@@ -187,16 +187,16 @@ static int svx_inetaddr_cmp_inner(svx_inetaddr_t *sa1, svx_inetaddr_t *sa2, int 
     switch(sa1->storage.addr.sa_family)
     {
     case AF_INET:
-        if(cmp_ip && 0 != (r = memcmp(&(sa1->storage.addr4.sin_addr), &(sa2->storage.addr4.sin_addr), sizeof(struct in_addr))))
+        if(cmp_ip && (0 != (r = memcmp(&(sa1->storage.addr4.sin_addr), &(sa2->storage.addr4.sin_addr), sizeof(struct in_addr)))))
             return r;
-        if(cmp_port && sa1->storage.addr4.sin_port != sa1->storage.addr4.sin_port)
-            return sa1->storage.addr4.sin_port > sa1->storage.addr4.sin_port ? 1 : -1;
+        if(cmp_port && (sa1->storage.addr4.sin_port != sa2->storage.addr4.sin_port))
+            return sa1->storage.addr4.sin_port > sa2->storage.addr4.sin_port ? 1 : -1;
         return 0;
     case AF_INET6:
-        if(cmp_ip && 0 != (r = memcmp(&(sa1->storage.addr6.sin6_addr), &(sa2->storage.addr6.sin6_addr), sizeof(struct in6_addr))))
+        if(cmp_ip && (0 != (r = memcmp(&(sa1->storage.addr6.sin6_addr), &(sa2->storage.addr6.sin6_addr), sizeof(struct in6_addr)))))
             return r;
-        if(cmp_port && sa1->storage.addr6.sin6_port != sa1->storage.addr6.sin6_port)
-            return sa1->storage.addr4.sin_port > sa1->storage.addr4.sin_port ? 1 : -1;
+        if(cmp_port && (sa1->storage.addr6.sin6_port != sa2->storage.addr6.sin6_port))
+            return sa1->storage.addr4.sin_port > sa2->storage.addr4.sin_port ? 1 : -1;
         return 0;
     default:
         SVX_LOG_ERRNO_ERR(SVX_ERRNO_NOTSPT, "family:%u\n", sa1->storage.addr.sa_family);

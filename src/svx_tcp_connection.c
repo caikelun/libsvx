@@ -360,6 +360,28 @@ int svx_tcp_connection_start(svx_tcp_connection_t *self)
     return 0;
 }
 
+int svx_tcp_connection_get_local_addr(svx_tcp_connection_t *self, svx_inetaddr_t *addr)
+{
+    int r;
+    
+    if(NULL == self || NULL == addr)  SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p, addr:%p\n", self, addr);
+
+    if(0 != (r = svx_inetaddr_from_fd_local(addr, self->fd))) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
+
+    return 0;
+}
+
+int svx_tcp_connection_get_peer_addr(svx_tcp_connection_t *self, svx_inetaddr_t *addr)
+{
+    int r;
+    
+    if(NULL == self || NULL == addr)  SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p, addr:%p\n", self, addr);
+
+    if(0 != (r = svx_inetaddr_from_fd_peer(addr, self->fd))) SVX_LOG_ERRNO_RETURN_ERR(r, NULL);
+
+    return 0;
+}
+
 int svx_tcp_connection_get_info(svx_tcp_connection_t *self, void **info)
 {
     if(NULL == self || NULL == info)  SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p, info:%p\n", self, info);

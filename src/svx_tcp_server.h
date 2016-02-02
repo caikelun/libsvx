@@ -64,6 +64,19 @@ extern int svx_tcp_server_create(svx_tcp_server_t **self,
  */
 extern int svx_tcp_server_destroy(svx_tcp_server_t **self);
 
+
+/*!
+ * Add more listener for TCP server. If you want, you can add any number of listener to
+ * one TCP server. All listener will run in the same looper.
+ *
+ * \param[in] self         The address of the TCP server.
+ * \param[in] listen_addr  The listen address.
+ *
+ * \return  On success, return zero; on error, return an error number greater than zero.
+ */
+extern int svx_tcp_server_add_listener(svx_tcp_server_t *self,
+                                       svx_inetaddr_t listen_addr);
+
 /*!
  * Set the I/O thread/looper's number for the TCP server.
  *
