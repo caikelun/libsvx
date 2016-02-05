@@ -115,7 +115,7 @@ int svx_tcp_acceptor_destroy(svx_tcp_acceptor_t **self)
     return 0;
 }
 
-int svx_tcp_acceptor_start(svx_tcp_acceptor_t *self, int if_reuse_port)
+int svx_tcp_acceptor_start(svx_tcp_acceptor_t *self, int reuseport)
 {
     const int on  = 1;
     const int off = 0;
@@ -135,8 +135,8 @@ int svx_tcp_acceptor_start(svx_tcp_acceptor_t *self, int if_reuse_port)
         SVX_LOG_ERRNO_GOTO_ERR(err, r = errno, NULL);
 
 #ifdef SO_REUSEPORT
-    if_reuse_port = if_reuse_port ? 1 : 0;
-    if(0 != setsockopt(self->listen_fd, SOL_SOCKET, SO_REUSEPORT, &if_reuse_port, sizeof(if_reuse_port)))
+    reuseport = reuseport ? 1 : 0;
+    if(0 != setsockopt(self->listen_fd, SOL_SOCKET, SO_REUSEPORT, &reuseport, sizeof(reuseport)))
         SVX_LOG_ERRNO_GOTO_ERR(err, r = errno, NULL);
 #endif
 

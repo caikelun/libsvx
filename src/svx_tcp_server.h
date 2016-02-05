@@ -114,13 +114,13 @@ extern int svx_tcp_server_set_keepalive(svx_tcp_server_t *self,
 /*!
  * Set the SO_REUSEPORT for listen fd. (SO_REUSEPORT was added from Linux kernel 3.9.0)
  *
- * \param[in] self           The address of the TCP server.
- * \param[in] if_reuse_port  Whether to enable SO_REUSEPORT for the listen fd.
+ * \param[in] self  The address of the TCP server.
+ * \param[in] on    Whether to enable SO_REUSEPORT for the listen fd.
+ *                  \c 0 means off, \1 means on, default is off.
  *
  * \return  On success, return zero; on error, return an error number greater than zero.
  */
-extern int svx_tcp_server_set_reuse_port(svx_tcp_server_t *self,
-                                         int if_reuse_port);
+extern int svx_tcp_server_set_reuseport(svx_tcp_server_t *self, int on);
 
 /*!
  * Set the read buffer length for all TCP connections.

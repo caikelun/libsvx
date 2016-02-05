@@ -67,7 +67,7 @@ struct svx_tcp_server
     int                              keepalive_idle_s; /* <=0: do NOT send TCP keep-alive. >0: send period. */
     int                              keepalive_intvl_s;
     int                              keepalive_cnt;
-    int                              if_reuse_port;
+    int                              reuseport;
     svx_tcp_connection_callbacks_t   callbacks;
 };
 
@@ -179,7 +179,7 @@ int svx_tcp_server_create(svx_tcp_server_t **self, svx_looper_t *looper, svx_ine
     (*self)->keepalive_idle_s               = 0;
     (*self)->keepalive_intvl_s              = 0;
     (*self)->keepalive_cnt                  = 0;
-    (*self)->if_reuse_port                  = 0;
+    (*self)->reuseport                      = 0;
     memset(&((*self)->callbacks), 0, sizeof((*self)->callbacks));
 
     if(0 != (r = svx_tcp_server_add_listener(*self, listen_addr))) SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
@@ -274,12 +274,12 @@ int svx_tcp_server_set_keepalive(svx_tcp_server_t *self, time_t idle_s, time_t i
     return 0;
 }
 
-int svx_tcp_server_set_reuse_port(svx_tcp_server_t *self, int if_reuse_port)
+int svx_tcp_server_set_reuseport(svx_tcp_server_t *self, int on)
 {
     if(NULL == self) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p\n", self);
 
 #ifdef SO_REUSEPORT
-    self->if_reuse_port = if_reuse_port ? 1 : 0;
+    self->reuseport = (on ? 1 : 0);
 #else
     SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_NOTSPT, "System does NOT support SO_REUSEPORT.\n");
 #endif
@@ -407,7 +407,7 @@ int svx_tcp_server_start(svx_tcp_server_t *self)
     }
 
     TAILQ_FOREACH(listener, &(self->listeners), link)
-        if(0 != (r = svx_tcp_acceptor_start(listener->acceptor, self->if_reuse_port)))
+        if(0 != (r = svx_tcp_acceptor_start(listener->acceptor, self->reuseport)))
             SVX_LOG_ERRNO_GOTO_ERR(err, r, NULL);
 
     return 0;

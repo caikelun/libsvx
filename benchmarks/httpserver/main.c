@@ -21,8 +21,18 @@
 /* The HTTP server object */
 static svx_tcp_server_t *server = NULL;
 
+/* The callback to handle TCP connection established */
+static void server_established_cb(svx_tcp_connection_t *conn, void *arg)
+{
+    SVX_UTIL_UNUSED(arg);
+
+    /* In this simple program, although we always send all the response data in a single writing,
+       but we still set the TCP_NODELAY. To be more close to the real world HTTP server. */
+    if(svx_tcp_connection_set_nodelay(conn, 1)) exit(1);
+}
+
 /* The callback to handle HTTP request */
-static void server_read(svx_tcp_connection_t *conn, svx_circlebuf_t *buf, void *arg)
+static void server_read_cb(svx_tcp_connection_t *conn, svx_circlebuf_t *buf, void *arg)
 {
     SVX_UTIL_UNUSED(arg);
     
@@ -43,16 +53,16 @@ static void server_read(svx_tcp_connection_t *conn, svx_circlebuf_t *buf, void *
         keep_alive = 0;
 
     /* Build the HTTP response. */
-    char    resp[1204];
-    size_t  resp_len = snprintf(resp, sizeof(resp),
-                                "HTTP/1.1 200 OK\r\n"
-                                "Server: libsvx-simplest-HTTP-server\r\n"
-                                "Content-Type: text/plain\r\n"
-                                "Content-Length: 12\r\n"
-                                "Connection: %s\r\n"
-                                "\r\n"
-                                "Hello world!",
-                                keep_alive ? "keep-alive" : "close");
+    char   resp[1024];
+    size_t resp_len = snprintf(resp, sizeof(resp),
+                               "HTTP/1.1 200 OK\r\n"
+                               "Server: libsvx-simplest-HTTP-server\r\n"
+                               "Content-Type: text/plain\r\n"
+                               "Content-Length: 12\r\n"
+                               "Connection: %s\r\n"
+                               "\r\n"
+                               "Hello world!",
+                               keep_alive ? "keep-alive" : "close");
 
     /* Wirte the HTTP response to client. */
     svx_tcp_connection_write(conn, (const uint8_t *)resp, resp_len);
@@ -82,8 +92,11 @@ static int server_start(svx_looper_t *looper, void *arg)
     /* Set TCP keep-alive for discarding timeout connections. */
     if(svx_tcp_server_set_keepalive(server, 5, 1, 3)) exit(1);
 
+    /* Set a callback fucntion for handling TCP connection established */
+    if(svx_tcp_server_set_established_cb(server, server_established_cb, NULL)) exit(1);
+
     /* Set a callback function for handling HTTP request. */
-    if(svx_tcp_server_set_read_cb(server, server_read, NULL)) exit(1);
+    if(svx_tcp_server_set_read_cb(server, server_read_cb, NULL)) exit(1);
 
     /* Start the HTTP server. */
     if(svx_tcp_server_start(server)) exit(1);

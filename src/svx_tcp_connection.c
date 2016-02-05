@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <netinet/tcp.h>
 #include "svx_tcp_connection.h"
 #include "svx_inetaddr.h"
 #include "svx_circlebuf.h"
@@ -703,6 +704,39 @@ int svx_tcp_connection_close(svx_tcp_connection_t *self)
 
     /* always close the connection in the next round */
     SVX_LOOPER_DISPATCH_HELPER_1(self->looper, svx_tcp_connection_handle_close, self);
+
+    return 0;
+}
+
+int svx_tcp_connection_set_nodelay(svx_tcp_connection_t *self, int on)
+{
+    if(NULL == self) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p\n", self);
+
+    on = (on ? 1 : 0);
+    if(0 != setsockopt(self->fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)))
+        SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
+
+    return 0;
+}
+
+int svx_tcp_connection_set_cork(svx_tcp_connection_t *self, int on)
+{
+    if(NULL == self) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p\n", self);
+
+    on = (on ? 1 : 0);
+    if(0 != setsockopt(self->fd, IPPROTO_TCP, TCP_CORK, &on, sizeof(on)))
+        SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
+
+    return 0;
+}
+
+int svx_tcp_connection_set_quickack(svx_tcp_connection_t *self, int on)
+{
+    if(NULL == self) SVX_LOG_ERRNO_RETURN_ERR(SVX_ERRNO_INVAL, "self:%p\n", self);
+
+    on = (on ? 1 : 0);
+    if(0 != setsockopt(self->fd, IPPROTO_TCP, TCP_QUICKACK, &on, sizeof(on)))
+        SVX_LOG_ERRNO_RETURN_ERR(errno, NULL);
 
     return 0;
 }

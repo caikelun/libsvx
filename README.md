@@ -92,6 +92,18 @@ libsvx/nginx and weighttp run in the same machine.
 
 ![libsvx vs. Nginx (2 threads/workers)](doc/bm_httpsvr_2.png)
 
+**NOTICE:**
+
+**The results of this benchmark test does not means libsvx have better performance than nginx.
+Because of our test HTTP server is very simple, and does not achieve a complete HTTP protocol,
+so we used very little CPU instruction for each HTTP requests.**
+
+**libsvx does not do any special optimization for HTTP server usage scenario, libsvx is mainly
+used to build custom protocol network programs in customized projects.**
+
+**The purpose of this benchmark is to show that, libsvx have the ability to cope with
+high-performance, concurrent network programs, and have no larger design flaws.**
+
 
 Website, Clone and Download
 ---------------------------

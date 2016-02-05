@@ -77,13 +77,13 @@ extern int svx_tcp_acceptor_destroy(svx_tcp_acceptor_t **self);
 /*!
  * Start the TCP acceptor.
  *
- * \param[in] self           The address of the TCP acceptor.
- * \param[in] if_reuse_port  Whether to enable SO_REUSEPORT for the listen fd.
- *                           (SO_REUSEPORT was added from Linux kernel 3.9.0)
+ * \param[in] self       The address of the TCP acceptor.
+ * \param[in] reuseport  Whether to enable SO_REUSEPORT for the listen fd.
+ *                       (SO_REUSEPORT was added from Linux kernel 3.9.0)
  *
  * \return  On success, return zero; on error, return an error number greater than zero.
  */
-extern int svx_tcp_acceptor_start(svx_tcp_acceptor_t *self, int if_reuse_port);
+extern int svx_tcp_acceptor_start(svx_tcp_acceptor_t *self, int reuseport);
 
 /*!
  * Stop the TCP acceptor.

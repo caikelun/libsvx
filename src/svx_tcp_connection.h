@@ -351,6 +351,39 @@ extern int svx_tcp_connection_shutdown_wr(svx_tcp_connection_t *self);
  */
 extern int svx_tcp_connection_close(svx_tcp_connection_t *self);
 
+/*!
+ * Set TCP_NODELAY for the connection's fd.
+ *
+ * \param[in] self  The address of the TCP connection.
+ * \param[in] on    Whether to enable TCP_NODELAY for the connection's fd.
+ *                  \c 0 means off, \1 means on, default is off.
+ *
+ * \return  On success, return zero; on error, return an error number greater than zero.
+ */
+extern int svx_tcp_connection_set_nodelay(svx_tcp_connection_t *self, int on);
+
+/*!
+ * Set TCP_CORK for the connection's fd.
+ *
+ * \param[in] self  The address of the TCP connection.
+ * \param[in] on    Whether to enable TCP_CORK for the connection's fd.
+ *                  \c 0 means off, \1 means on, default is off.
+ *
+ * \return  On success, return zero; on error, return an error number greater than zero.
+ */
+extern int svx_tcp_connection_set_cork(svx_tcp_connection_t *self, int on);
+
+/*!
+ * Set TCP_QUICKACK for the connection's fd.
+ *
+ * \param[in] self  The address of the TCP connection.
+ * \param[in] on    Whether to enable TCP_QUICKACK for the connection's fd.
+ *                  \c 0 means off, \1 means on, default is off.
+ *
+ * \return  On success, return zero; on error, return an error number greater than zero.
+ */
+extern int svx_tcp_connection_set_quickack(svx_tcp_connection_t *self, int on);
+
 #ifdef __cplusplus
 }
 #endif

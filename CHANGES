@@ -1,3 +1,9 @@
+2016-02-05  caikelun  <caikelun@gmail.com>
+
+  * Add set_nodelay(), set_crok(), set_quickack() in svx_tcp_connection.
+  * Add more information about benchmark in README.md.
+  * Version 0.0.10
+
 2016-02-02  caikelun  <caikelun@gmail.com>
 
   * Fix a bug about checking ports equality in svx_inetaddr.
