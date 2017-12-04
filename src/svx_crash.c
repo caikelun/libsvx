@@ -89,11 +89,7 @@ static struct tm *svx_crash_time2tm(const time_t *timep, long gmtoff, struct tm 
 
     if(NULL == timep || NULL == result) return NULL;
 
-#ifdef __USE_BSD
     result->tm_gmtoff = gmtoff;
-#else
-    result->__tm_gmtoff = gmtoff;
-#endif
 
     days = *timep / SVX_CRASH_SECS_PER_DAY;
     rem = *timep % SVX_CRASH_SECS_PER_DAY;

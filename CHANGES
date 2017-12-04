@@ -1,3 +1,8 @@
+2017-12-04  caikelun  <caikelun@gmail.com>
+
+  * Fix some compilation errors for GCC 6.
+  * Version 0.0.11
+
 2016-02-05  caikelun  <caikelun@gmail.com>
 
   * Add set_nodelay(), set_crok(), set_quickack() in svx_tcp_connection.
