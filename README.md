@@ -105,12 +105,10 @@ used to build custom protocol network programs in customized projects.**
 high-performance, concurrent network programs, and have no larger design flaws.**
 
 
-Website, Clone and Download
----------------------------
+Website
+-------
 
-* Github: https://github.com/caikelun/libsvx
-* Coding: https://coding.net/u/caikelun/p/libsvx
-* OSC: https://git.oschina.net/caikelun/libsvx
+https://gitlab.com/caikelun/libsvx
 
 
 Compile
@@ -218,17 +216,14 @@ Samples
 Documents
 ---------
 
-* Build local documents from source code via doxygen:
+Build local documents from source code via doxygen:
 
         make doc
-
-* Visit online documents on:
-
-http://caikelun.github.io/proj/libsvx/doxy/index.html
 
 
 ToDo
 ----
+
 * svx_crash: Dump registers value for ARM/ARM64 architecture.
 * More benchmarks.
 * More samples.
